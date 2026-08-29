@@ -1,0 +1,9 @@
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+@theme {
+  --font-sans: "DM Sans", ui-sans-serif, sans-serif;
+  --font-serif: "Libre Baskerville", ui-serif, serif;
+}
