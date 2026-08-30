@@ -366,7 +366,7 @@ export default function CustomerMenu() {
             Vyna Coffee & Restaurant
           </h1>
           {/* Greeting cards */}
-          <GreetingCard menus={menus} onSelectCategory={handleSelectCategory} />
+          <GreetingCard menus={menus} onSelectMenu={handleOpenDetail} />
         </div>
 
         <div className="flex items-center gap-3 bg-white p-3 rounded-2xl shadow-sm border border-[#e8ded2]">

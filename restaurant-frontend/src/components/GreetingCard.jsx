@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 
-export default function GreetingCard({ menus = [], onSelectCategory }) {
+// 1. Tambahkan prop baru: onSelectMenu
+export default function GreetingCard({ menus = [], onSelectMenu }) {
   const [userName, setUserName] = useState("Kopi Lovers <3");
 
   const greetings = [
@@ -13,7 +14,6 @@ export default function GreetingCard({ menus = [], onSelectCategory }) {
     greetings[Math.floor(Math.random() * greetings.length)],
   );
 
-  // State untuk menyimpan satu menu random pilihan dari database
   const [randomMenu, setRandomMenu] = useState(null);
 
   useEffect(() => {
@@ -23,10 +23,8 @@ export default function GreetingCard({ menus = [], onSelectCategory }) {
     }
   }, []);
 
-  // Setiap kali data menus dari database berhasil di-fetch, pilih satu menu random khusus Coffee / Non-Coffee
   useEffect(() => {
     if (menus.length > 0) {
-      // Filter hanya menu yang kategorinya Coffee atau Non-Coffee
       const coffeeAndDrinks = menus.filter(
         (m) => m.category === "Coffee" || m.category === "Non-Coffee",
       );
@@ -47,7 +45,6 @@ export default function GreetingCard({ menus = [], onSelectCategory }) {
         <p className="text-xs text-stone-600 mt-0.5">{currentGreeting}</p>
       </div>
 
-      {/* Kotak Rekomendasi Menu dari Database */}
       {randomMenu && (
         <div className="bg-[#fcf9f5] p-3 rounded-2xl border border-[#e8ded2] flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -57,31 +54,31 @@ export default function GreetingCard({ menus = [], onSelectCategory }) {
                 "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"
               }
               alt={randomMenu.name}
-              className="w-20 h-20 rounded-xl object-cover border border-[#e8ded2]"
+              className="w-10 h-10 rounded-xl object-cover border border-[#e8ded2]"
             />
             <div>
-              <p className="text-[12px] uppercase font-bold text-stone-400 mb-3">
+              <p className="text-[10px] uppercase font-bold text-stone-400">
                 Rekomendasi Hari Ini
               </p>
-              <span className="text-[15px] font-bold text-[#5c1f2e] block">
+              <span className="text-xs font-bold text-[#5c1f2e] block">
                 {randomMenu.name}
               </span>
-              <span className="text-[15px] text-stone-500">
+              <span className="text-[11px] text-stone-500">
                 Rp {randomMenu.price?.toLocaleString("id-ID")}
               </span>
             </div>
           </div>
 
+          {/* 2. Saat diklik, langsung panggil fungsi detail produk dengan objek menu tersebut */}
           <button
             onClick={() => {
-              if (onSelectCategory) {
-                // Langsung filter kategori menu tersebut saat diklik
-                onSelectCategory(randomMenu.category);
+              if (onSelectMenu) {
+                onSelectMenu(randomMenu);
               }
             }}
-            className="text-[12px] font-bold text-white bg-[#5c1f2e] px-3.5 py-2 rounded-xl hover:bg-[#431420] transition-colors cursor-pointer shadow-sm"
+            className="text-xs font-bold text-white bg-[#5c1f2e] px-3.5 py-2 rounded-xl hover:bg-[#431420] transition-colors cursor-pointer shadow-sm"
           >
-            Pesan
+            Coba Pesan 🚀
           </button>
         </div>
       )}
