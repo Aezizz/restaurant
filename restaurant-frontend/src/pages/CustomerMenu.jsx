@@ -9,6 +9,7 @@ import ProductDetailModal from "../components/ProductDetailModal";
 import NotificationModal from "../components/NotificationModal";
 import CartDrawer from "../components/CartDrawer";
 import { socket, API_BASE_URL as API_URL } from "../services/socket"; // Sesuaikan path socket lu
+import GreetingCard from "../components/GreetingCard";
 const RANDOM_DISPLAY_COUNT = 8;
 
 export default function CustomerMenu() {
@@ -22,12 +23,14 @@ export default function CustomerMenu() {
   const [cart, setCart] = useState([]);
   // Single active modal state: 'cart' | 'notif' | 'detail' | null
   const [activeModal, setActiveModal] = useState(null);
-  const [notification, setNotification] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const isCartOpen = activeModal === "cart";
   const isNotifOpen = activeModal === "notif";
-
+  // Tambahkan fungsi ini di dalam komponen CustomerMenu (misal di bawah deklarasi state lainnya)
+  const handleSelectCategory = (categoryName) => {
+    setActiveCategory(categoryName);
+  };
   // State untuk Modal Detail Produk & Kustomisasi
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [customization, setCustomization] = useState({
@@ -195,8 +198,16 @@ export default function CustomerMenu() {
   useEffect(() => {
     socket.on("order-ready", (data) => {
       if (Number(data.table_number) === Number(tableNumber)) {
-        setNotification(
-          `Yeay! Pesanan untuk Meja #${data.table_number} sudah siap diambil di kasir! ☕🚀`,
+        toast.success(
+          `🔔 Pesanan Siap! Yeay! Pesanan untuk Meja #${data.table_number} sudah siap diambil di kasir! ☕🚀`,
+          {
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          },
         );
 
         const audio = new Audio(
@@ -300,14 +311,12 @@ export default function CustomerMenu() {
     setIsSubmitting(true);
 
     try {
-      // 🔑 Ambil token dari localStorage sebelum fetch
       const token = localStorage.getItem("userToken");
 
       const response = await fetch(`${API_URL}/api/orders`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // 🔑 Kirim token jika user sedang login
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
@@ -349,21 +358,6 @@ export default function CustomerMenu() {
         closeOnClick
         theme="light"
       />
-      {notification && (
-        <div className="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 bg-emerald-600 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-4 animate-bounce max-w-sm w-full border-2 border-black">
-          <div className="text-2xl">🔔</div>
-          <div className="flex-1">
-            <h4 className="font-bold text-sm">Pesanan Siap!</h4>
-            <p className="text-xs mt-0.5">{notification}</p>
-          </div>
-          <button
-            onClick={() => setNotification(null)}
-            className="bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded-xl text-xs font-bold cursor-pointer"
-          >
-            Tutup
-          </button>
-        </div>
-      )}
 
       {/* HEADER & NOMOR MEJA */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-[#e8ded2] pb-6 mb-8 gap-4">
@@ -371,9 +365,8 @@ export default function CustomerMenu() {
           <h1 className="text-2xl font-serif font-bold tracking-wide">
             Vyna Coffee & Restaurant
           </h1>
-          <p className="text-base opacity-75 mt-1 font-semibold">
-            Silakan pilih menu favorit Anda dan nikmati hidangan kami.
-          </p>
+          {/* Greeting cards */}
+          <GreetingCard menus={menus} onSelectCategory={handleSelectCategory} />
         </div>
 
         <div className="flex items-center gap-3 bg-white p-3 rounded-2xl shadow-sm border border-[#e8ded2]">
@@ -390,18 +383,11 @@ export default function CustomerMenu() {
         </div>
       </div>
 
-      {/* BANNER PROMO */}
+      {/* BANNER advertisement */}
       <PromoCarousel />
 
       {/* FILTER KATEGORI */}
       <div className="relative flex items-center mb-8">
-        <button
-          onClick={() => scrollCategories("left")}
-          className="hidden md:flex absolute -left-4 z-10 bg-white shadow-md p-2 rounded-full border border-[#e8ded2] text-[#5c1f2e] hover:bg-stone-100 cursor-pointer"
-        >
-          ◀
-        </button>
-
         <div className="relative mb-0 w-full select-none">
           <div
             ref={scrollContainerRef}
@@ -429,13 +415,6 @@ export default function CustomerMenu() {
             ))}
           </div>
         </div>
-
-        <button
-          onClick={() => scrollCategories("right")}
-          className="hidden md:flex absolute -right-4 z-10 bg-white shadow-md p-2 rounded-full border border-[#e8ded2] text-[#5c1f2e] hover:bg-stone-100 cursor-pointer"
-        >
-          ▶
-        </button>
       </div>
 
       <p className="text-xs font-semibold opacity-60 mb-4 -mt-4">
@@ -444,7 +423,7 @@ export default function CustomerMenu() {
           : "Rekomendasi untuk Anda"}
       </p>
 
-      {/* MENU GRID */}
+      {/* GRID MENU */}
       <div
         onMouseDown={handleGridMouseDown}
         className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 select-none ${
@@ -540,8 +519,6 @@ export default function CustomerMenu() {
           isOpen={activeModal === "account"}
           onClose={() => setActiveModal(null)}
           onReorder={(reorderItems) => {
-            // Logika memasukkan item ke state cart lu
-            // Contoh: Menggabungkan item lama ke keranjang aktif
             setCart((prevCart) => {
               // Gabungkan atau tambahkan item reorder ke keranjang
               return [...prevCart, ...reorderItems];
