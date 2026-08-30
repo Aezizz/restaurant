@@ -1,0 +1,14 @@
+{
+  "name": "restaurant-pos",
+  "version": "1.0.0",
+  "description": "Vyna Coffee POS Fullstack App",
+  "main": "index.js",
+  "scripts": {
+    "server": "cd restaurant-backend && npm run dev",
+    "client": "cd restaurant-frontend && npm run dev",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
