@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import { API_BASE_URL } from "../services/socket";
 import AuthForm from "./account/AuthForm";
 import OrderHistoryTab from "./account/OrderHistoryTab";
 import AccountSettingsTab from "./account/AccountSettingsTab";
 import RatingModal from "./account/RatingModal";
-
-const API_URL = "http://localhost:3000";
 
 export default function AccountPage({ isOpen, onClose, onReorder }) {
   if (!isOpen) return null;
@@ -15,14 +14,9 @@ export default function AccountPage({ isOpen, onClose, onReorder }) {
     localStorage.getItem("userName") || "",
   );
   const [isLoginMode, setIsLoginMode] = useState(true);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ name: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("history");
-
   const [orderHistory, setOrderHistory] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [profileData, setProfileData] = useState({
@@ -31,7 +25,6 @@ export default function AccountPage({ isOpen, onClose, onReorder }) {
     currentPassword: "",
     newPassword: "",
   });
-
   const [ratingModalOpen, setRatingModalOpen] = useState(false);
   const [selectedOrderForRating, setSelectedOrderForRating] = useState(null);
   const [ratingScore, setRatingScore] = useState(5);
@@ -42,7 +35,7 @@ export default function AccountPage({ isOpen, onClose, onReorder }) {
     if (!token) return;
     setLoadingOrders(true);
 
-    fetch(`${API_URL}/api/orders/my-history`, {
+    fetch(`${API_BASE_URL}/api/orders/my-history`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -59,7 +52,7 @@ export default function AccountPage({ isOpen, onClose, onReorder }) {
     const endpoint = isLoginMode ? "/api/auth/login" : "/api/auth/register";
 
     try {
-      const response = await fetch(`${API_URL}${endpoint}`, {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -114,7 +107,7 @@ export default function AccountPage({ isOpen, onClose, onReorder }) {
 
     try {
       const response = await fetch(
-        `${API_URL}/api/orders/${selectedOrderForRating._id}/rate`,
+        `${API_BASE_URL}/api/orders/${selectedOrderForRating._id}/rate`,
         {
           method: "POST",
           headers: {
@@ -158,7 +151,6 @@ export default function AccountPage({ isOpen, onClose, onReorder }) {
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex justify-end">
       <div className="w-full max-w-md bg-white h-full p-6 pb-24 md:pb-6 shadow-2xl flex flex-col justify-between overflow-y-auto">
         <div>
-          {/* Header */}
           <div className="flex justify-between items-center border-b border-[#e8ded2] pb-4 mb-5">
             <div>
               <h2 className="text-xl font-bold font-serif text-[#5c1f2e]">
@@ -206,7 +198,6 @@ export default function AccountPage({ isOpen, onClose, onReorder }) {
                 </button>
               </div>
 
-              {/* Sub-Tabs */}
               <div className="flex bg-stone-100 p-1 rounded-xl">
                 <button
                   onClick={() => setActiveTab("history")}

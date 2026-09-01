@@ -1,18 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { io } from "socket.io-client";
-
-const socket = io("http://localhost:3000");
+import { socket, API_BASE_URL } from "../services/socket";
 
 export default function NotificationModal({ isOpen, onClose }) {
   const [orders, setOrders] = useState([]);
-  const [alertBanner, setAlertBanner] = useState(null); // State buat banner custom di atas
+  const [alertBanner, setAlertBanner] = useState(null);
   const tableNumber = localStorage.getItem("tableNumber");
 
   useEffect(() => {
     if (!isOpen) return;
 
     if (tableNumber) {
-      fetch(`http://localhost:3000/api/orders/table/${tableNumber}`)
+      fetch(`${API_BASE_URL}/api/orders/table/${tableNumber}`)
         .then((res) => res.json())
         .then((result) => {
           if (result.success && Array.isArray(result.data)) {
@@ -29,19 +27,16 @@ export default function NotificationModal({ isOpen, onClose }) {
         setOrders((prevOrders) =>
           prevOrders.map((ord) => {
             if (ord._id === updatedOrder._id) {
-              // Jika status berubah jadi ready atau completed, nyalakan banner custom kita!
-              if (ord.status !== updatedOrder.status) {
-                if (
-                  updatedOrder.status === "completed" ||
-                  updatedOrder.status === "ready"
-                ) {
-                  setAlertBanner({
-                    queue: updatedOrder.queue_number || "---",
-                    status: updatedOrder.status,
-                  });
-                  // Otomatis hilang setelah 6 detik
-                  setTimeout(() => setAlertBanner(null), 6000);
-                }
+              if (
+                ord.status !== updatedOrder.status &&
+                (updatedOrder.status === "completed" ||
+                  updatedOrder.status === "ready")
+              ) {
+                setAlertBanner({
+                  queue: updatedOrder.queue_number || "---",
+                  status: updatedOrder.status,
+                });
+                setTimeout(() => setAlertBanner(null), 6000);
               }
               return updatedOrder;
             }
@@ -60,7 +55,6 @@ export default function NotificationModal({ isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex justify-end">
-      {/* ================= CUSTOM BANNER NOTIFIKASI DI ATAS ================= */}
       {alertBanner && (
         <div className="absolute top-4 left-4 right-4 z-50 max-w-md mx-auto bg-[#fcf9f5] border border-[#e8ded2] rounded-2xl shadow-2xl p-4 flex items-start gap-3 animate-bounce-short">
           <span className="text-xl">🔔</span>

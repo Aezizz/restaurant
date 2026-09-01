@@ -1,38 +1,30 @@
 import React, { useState, useEffect } from "react";
 
-// 1. Tambahkan prop baru: onSelectMenu
+const GREETINGS = [
+  "Mau ngopi apa hari ini?",
+  "Udah ngopi belum?",
+  "Yuk cari yang seger-seger!",
+];
+
 export default function GreetingCard({ menus = [], onSelectMenu }) {
   const [userName, setUserName] = useState("Kopi Lovers <3");
-
-  const greetings = [
-    "Mau ngopi apa hari ini?",
-    "Udah ngopi belum?",
-    "Yuk cari yang seger-seger!",
-  ];
-
   const [currentGreeting] = useState(
-    greetings[Math.floor(Math.random() * greetings.length)],
+    GREETINGS[Math.floor(Math.random() * GREETINGS.length)],
   );
-
   const [randomMenu, setRandomMenu] = useState(null);
 
   useEffect(() => {
     const savedName = localStorage.getItem("userName");
-    if (savedName) {
-      setUserName(savedName);
-    }
+    if (savedName) setUserName(savedName);
   }, []);
 
   useEffect(() => {
-    if (menus.length > 0) {
-      const coffeeAndDrinks = menus.filter(
-        (m) => m.category === "Coffee" || m.category === "Non-Coffee",
-      );
-
-      if (coffeeAndDrinks.length > 0) {
-        const randomIndex = Math.floor(Math.random() * coffeeAndDrinks.length);
-        setRandomMenu(coffeeAndDrinks[randomIndex]);
-      }
+    if (menus.length === 0) return;
+    const drinks = menus.filter(
+      (m) => m.category === "Coffee" || m.category === "Non-Coffee",
+    );
+    if (drinks.length > 0) {
+      setRandomMenu(drinks[Math.floor(Math.random() * drinks.length)]);
     }
   }, [menus]);
 
@@ -69,13 +61,8 @@ export default function GreetingCard({ menus = [], onSelectMenu }) {
             </div>
           </div>
 
-          {/* 2. Saat diklik, langsung panggil fungsi detail produk dengan objek menu tersebut */}
           <button
-            onClick={() => {
-              if (onSelectMenu) {
-                onSelectMenu(randomMenu);
-              }
-            }}
+            onClick={() => onSelectMenu?.(randomMenu)}
             className="text-xs font-bold text-white bg-[#5c1f2e] px-3.5 py-2 rounded-xl hover:bg-[#431420] transition-colors cursor-pointer shadow-sm"
           >
             Coba Pesan 🚀

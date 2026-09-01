@@ -7,6 +7,17 @@ import KitchenHeader from "../components/kitchen/KitchenHeader";
 import OrderGrid from "../components/kitchen/OrderGrid";
 import { useKitchenOrders } from "../hooks/useKitchenOrders";
 
+function StatCard({ label, value, accentColor }) {
+  return (
+    <div
+      className={`bg-white rounded-lg shadow-sm border-l-4 ${accentColor} px-5 py-4 flex-1 min-w-[220px]`}
+    >
+      <p className="text-sm text-gray-500 mb-1">{label}</p>
+      <h3 className="text-2xl font-bold text-gray-800">{value}</h3>
+    </div>
+  );
+}
+
 export default function KitchenDashboard() {
   const {
     orders,
@@ -15,7 +26,7 @@ export default function KitchenDashboard() {
     resetCompletedOrders,
     exportOrdersToSheets,
     reNotifyCustomer,
-    dailyStats, // 👈 Ambil dailyStats dari hook
+    dailyStats,
   } = useKitchenOrders();
 
   const [selectedOrderToPrint, setSelectedOrderToPrint] = useState(null);
@@ -29,9 +40,7 @@ export default function KitchenDashboard() {
 
   const handlePrintReceipt = (order) => {
     setSelectedOrderToPrint(order);
-    setTimeout(() => {
-      window.print();
-    }, 200);
+    setTimeout(() => window.print(), 200);
   };
 
   const handleTriggerResetQueue = () => {
@@ -69,7 +78,7 @@ export default function KitchenDashboard() {
   };
 
   return (
-    <div className="kitchen-dashboard" style={{ padding: "20px" }}>
+    <div className="p-5">
       <ToastContainer
         position="top-center"
         autoClose={3000}
@@ -84,56 +93,17 @@ export default function KitchenDashboard() {
         onExportSheets={handleTriggerExportSheets}
       />
 
-      {/* 📊 Kotak Indikator Total Pesanan & Pendapatan Harian */}
-      <div
-        style={{
-          display: "flex",
-          gap: "15px",
-          margin: "20px 0",
-          flexWrap: "wrap",
-        }}
-      >
-        <div
-          style={{
-            background: "#fff",
-            padding: "15px 20px",
-            borderRadius: "8px",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-            borderLeft: "5px solid #4f46e5",
-            minWidth: "220px",
-            flex: "1",
-          }}
-        >
-          <p
-            style={{ margin: "0 0 5px 0", fontSize: "14px", color: "#6b7280" }}
-          >
-            Total Pesanan Hari Ini
-          </p>
-          <h3 style={{ margin: 0, fontSize: "24px", color: "#1f2937" }}>
-            {dailyStats?.totalOrders || 0} Transaksi
-          </h3>
-        </div>
-
-        <div
-          style={{
-            background: "#fff",
-            padding: "15px 20px",
-            borderRadius: "8px",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-            borderLeft: "5px solid #10b981",
-            minWidth: "220px",
-            flex: "1",
-          }}
-        >
-          <p
-            style={{ margin: "0 0 5px 0", fontSize: "14px", color: "#6b7280" }}
-          >
-            Estimasi Pendapatan
-          </p>
-          <h3 style={{ margin: 0, fontSize: "24px", color: "#1f2937" }}>
-            Rp {dailyStats?.totalRevenue?.toLocaleString("id-ID") || 0}
-          </h3>
-        </div>
+      <div className="flex gap-4 my-5 flex-wrap">
+        <StatCard
+          label="Total Pesanan Hari Ini"
+          value={`${dailyStats?.totalOrders || 0} Transaksi`}
+          accentColor="border-indigo-500"
+        />
+        <StatCard
+          label="Estimasi Pendapatan"
+          value={`Rp ${dailyStats?.totalRevenue?.toLocaleString("id-ID") || 0}`}
+          accentColor="border-emerald-500"
+        />
       </div>
 
       <OrderGrid

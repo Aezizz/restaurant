@@ -1,19 +1,28 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-// Pastikan path import komponen di bawah sesuai dengan struktur folder lu
 import AccountPage from "../components/AccountPage";
 import BottomNav from "../components/BottomNav";
 import PromoCarousel from "../components/PromoCarousel";
 import ProductDetailModal from "../components/ProductDetailModal";
 import NotificationModal from "../components/NotificationModal";
 import CartDrawer from "../components/CartDrawer";
-import { socket, API_BASE_URL as API_URL } from "../services/socket"; // Sesuaikan path socket lu
 import GreetingCard from "../components/GreetingCard";
+import { socket, API_BASE_URL } from "../services/socket";
+
 const RANDOM_DISPLAY_COUNT = 8;
+
+const CATEGORIES = [
+  { key: "Makanan Berat", label: "Makanan Berat" },
+  { key: "Makanan Ringan", label: "Makanan Ringan" },
+  { key: "Coffee", label: "Coffee" },
+  { key: "Non-Coffee", label: "Non-Coffee" },
+];
 
 export default function CustomerMenu() {
   const scrollContainerRef = useRef(null);
+  const modalContentRef = useRef(null);
+  const dragDistanceRef = useRef(0);
 
   const [menus, setMenus] = useState([]);
   const [activeCategory, setActiveCategory] = useState(null);
@@ -21,17 +30,8 @@ export default function CustomerMenu() {
     localStorage.getItem("tableNumber") || "",
   );
   const [cart, setCart] = useState([]);
-  // Single active modal state: 'cart' | 'notif' | 'detail' | null
   const [activeModal, setActiveModal] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isAccountOpen, setIsAccountOpen] = useState(false);
-  const isCartOpen = activeModal === "cart";
-  const isNotifOpen = activeModal === "notif";
-  // Tambahkan fungsi ini di dalam komponen CustomerMenu (misal di bawah deklarasi state lainnya)
-  const handleSelectCategory = (categoryName) => {
-    setActiveCategory(categoryName);
-  };
-  // State untuk Modal Detail Produk & Kustomisasi
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [customization, setCustomization] = useState({
     variant: "",
@@ -41,131 +41,35 @@ export default function CustomerMenu() {
     quantity: 1,
   });
 
-  // State untuk logika Click & Drag Mouse pada wadah kategori (horizontal)
+  // --- Drag horizontal untuk wadah kategori (chip) ---
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
 
-  // State + ref untuk logika Click & Drag Mouse pada grid menu (vertikal, "grab to pan")
+  // --- Drag vertikal "grab to pan" untuk grid menu ---
   const [isPageDragging, setIsPageDragging] = useState(false);
   const [dragStartY, setDragStartY] = useState(0);
   const [dragStartScrollY, setDragStartScrollY] = useState(0);
-  const dragDistanceRef = useRef(0);
 
-  // State + ref untuk drag-scroll di DALAM modal detail produk
-  const modalContentRef = useRef(null);
+  // --- Drag vertikal untuk konten DALAM modal detail produk ---
   const [isModalDragging, setIsModalDragging] = useState(false);
   const [modalDragStartY, setModalDragStartY] = useState(0);
   const [modalDragStartScrollTop, setModalDragStartScrollTop] = useState(0);
 
-  const scrollCategories = (direction) => {
-    if (scrollContainerRef.current) {
-      const scrollAmount = direction === "left" ? -200 : 200;
-      scrollContainerRef.current.scrollBy({
-        left: scrollAmount,
-        behavior: "smooth",
-      });
-    }
-  };
+  const isCartOpen = activeModal === "cart";
+  const isNotifOpen = activeModal === "notif";
 
-  // --- Drag horizontal untuk wadah kategori (chip) ---
-  const handleMouseDown = (e) => {
-    setIsDragging(true);
-    setStartX(e.pageX - scrollContainerRef.current.offsetLeft);
-    setScrollLeft(scrollContainerRef.current.scrollLeft);
-  };
-
-  const handleMouseLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const handleMouseMove = (e) => {
-    if (!isDragging) return;
-    e.preventDefault();
-    const x = e.pageX - scrollContainerRef.current.offsetLeft;
-    const walk = (x - startX) * 2;
-    scrollContainerRef.current.scrollLeft = scrollLeft - walk;
-  };
-
-  // --- Drag vertikal "grab to pan" untuk grid menu ---
-  const handleGridMouseDown = (e) => {
-    setIsPageDragging(true);
-    setDragStartY(e.pageY);
-    setDragStartScrollY(window.scrollY);
-    dragDistanceRef.current = 0;
-  };
-
+  // --- Fetch menu saat mount ---
   useEffect(() => {
-    if (!isPageDragging) return;
-
-    const handleWindowMouseMove = (e) => {
-      const deltaY = e.pageY - dragStartY;
-      dragDistanceRef.current = Math.abs(deltaY);
-      window.scrollTo(0, dragStartScrollY - deltaY);
-    };
-
-    const handleWindowMouseUp = () => {
-      setIsPageDragging(false);
-    };
-
-    window.addEventListener("mousemove", handleWindowMouseMove);
-    window.addEventListener("mouseup", handleWindowMouseUp);
-
-    return () => {
-      window.removeEventListener("mousemove", handleWindowMouseMove);
-      window.removeEventListener("mouseup", handleWindowMouseUp);
-    };
-  }, [isPageDragging, dragStartY, dragStartScrollY]);
-
-  const handleCardClick = (menu) => {
-    if (dragDistanceRef.current > 5) return;
-    handleOpenDetail(menu);
-  };
-
-  // --- Drag vertikal untuk konten DALAM modal detail produk ---
-  const handleModalMouseDown = (e) => {
-    if (e.target.closest("button, input")) return;
-    setIsModalDragging(true);
-    setModalDragStartY(e.pageY);
-    setModalDragStartScrollTop(modalContentRef.current.scrollTop);
-  };
-
-  useEffect(() => {
-    if (!isModalDragging) return;
-
-    const handleModalMouseMove = (e) => {
-      if (!modalContentRef.current) return;
-      const deltaY = e.pageY - modalDragStartY;
-      modalContentRef.current.scrollTop = modalDragStartScrollTop - deltaY;
-    };
-
-    const handleModalMouseUp = () => {
-      setIsModalDragging(false);
-    };
-
-    window.addEventListener("mousemove", handleModalMouseMove);
-    window.addEventListener("mouseup", handleModalMouseUp);
-
-    return () => {
-      window.removeEventListener("mousemove", handleModalMouseMove);
-      window.removeEventListener("mouseup", handleModalMouseUp);
-    };
-  }, [isModalDragging, modalDragStartY, modalDragStartScrollTop]);
-
-  useEffect(() => {
-    fetch(`${API_URL}/api/menus`)
+    fetch(`${API_BASE_URL}/api/menus`)
       .then((res) => res.json())
       .then((result) => setMenus(result.data || []))
       .catch((err) => console.error("Error fetching menus:", err));
   }, []);
 
+  // --- Lock body scroll saat modal terbuka ---
   useEffect(() => {
-    const isModalOpen = activeModal !== null;
-    if (!isModalOpen) return;
+    if (activeModal === null) return;
 
     const scrollY = window.scrollY;
     const originalStyle = {
@@ -195,6 +99,7 @@ export default function CustomerMenu() {
     };
   }, [activeModal]);
 
+  // --- Socket listener: notifikasi pesanan siap ---
   useEffect(() => {
     socket.on("order-ready", (data) => {
       if (Number(data.table_number) === Number(tableNumber)) {
@@ -222,23 +127,93 @@ export default function CustomerMenu() {
     };
   }, [tableNumber]);
 
-  const categories = [
-    { key: "Makanan Berat", label: "Makanan Berat" },
-    { key: "Makanan Ringan", label: "Makanan Ringan" },
-    { key: "Coffee", label: "Coffee" },
-    { key: "Non-Coffee", label: "Non-Coffee" },
-  ];
+  // --- Drag horizontal (kategori chip) ---
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    setStartX(e.pageX - scrollContainerRef.current.offsetLeft);
+    setScrollLeft(scrollContainerRef.current.scrollLeft);
+  };
+  const handleMouseLeave = () => setIsDragging(false);
+  const handleMouseUp = () => setIsDragging(false);
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const x = e.pageX - scrollContainerRef.current.offsetLeft;
+    scrollContainerRef.current.scrollLeft = scrollLeft - (x - startX) * 2;
+  };
 
+  // --- Drag vertikal (grid menu) ---
+  const handleGridMouseDown = (e) => {
+    setIsPageDragging(true);
+    setDragStartY(e.pageY);
+    setDragStartScrollY(window.scrollY);
+    dragDistanceRef.current = 0;
+  };
+
+  useEffect(() => {
+    if (!isPageDragging) return;
+
+    const handleWindowMouseMove = (e) => {
+      const deltaY = e.pageY - dragStartY;
+      dragDistanceRef.current = Math.abs(deltaY);
+      window.scrollTo(0, dragStartScrollY - deltaY);
+    };
+    const handleWindowMouseUp = () => setIsPageDragging(false);
+
+    window.addEventListener("mousemove", handleWindowMouseMove);
+    window.addEventListener("mouseup", handleWindowMouseUp);
+
+    return () => {
+      window.removeEventListener("mousemove", handleWindowMouseMove);
+      window.removeEventListener("mouseup", handleWindowMouseUp);
+    };
+  }, [isPageDragging, dragStartY, dragStartScrollY]);
+
+  const handleCardClick = (menu) => {
+    if (dragDistanceRef.current > 5) return;
+    handleOpenDetail(menu);
+  };
+
+  // --- Drag vertikal (konten modal detail) ---
+  const handleModalMouseDown = (e) => {
+    if (e.target.closest("button, input")) return;
+    setIsModalDragging(true);
+    setModalDragStartY(e.pageY);
+    setModalDragStartScrollTop(modalContentRef.current.scrollTop);
+  };
+
+  useEffect(() => {
+    if (!isModalDragging) return;
+
+    const handleModalMouseMove = (e) => {
+      if (!modalContentRef.current) return;
+      modalContentRef.current.scrollTop =
+        modalDragStartScrollTop - (e.pageY - modalDragStartY);
+    };
+    const handleModalMouseUp = () => setIsModalDragging(false);
+
+    window.addEventListener("mousemove", handleModalMouseMove);
+    window.addEventListener("mouseup", handleModalMouseUp);
+
+    return () => {
+      window.removeEventListener("mousemove", handleModalMouseMove);
+      window.removeEventListener("mouseup", handleModalMouseUp);
+    };
+  }, [isModalDragging, modalDragStartY, modalDragStartScrollTop]);
+
+  // --- Derived state ---
   const randomMenus = useMemo(() => {
     if (menus.length === 0) return [];
-    const shuffled = [...menus].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, RANDOM_DISPLAY_COUNT);
+    return [...menus]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, RANDOM_DISPLAY_COUNT);
   }, [menus]);
 
   const filteredMenus = activeCategory
     ? menus.filter((menu) => menu.category === activeCategory)
     : randomMenus;
 
+  // --- Handlers ---
   const handleTableChange = (e) => {
     const val = e.target.value;
     setTableNumber(val);
@@ -250,24 +225,15 @@ export default function CustomerMenu() {
     setSelectedProduct(null);
   };
 
-  const handleOpenCart = () => {
-    setActiveModal("cart");
-  };
-
-  const handleOpenNotif = () => {
-    setActiveModal("notif");
-  };
-
-  const handleOpenAccount = () => {
-    setActiveModal("account");
-  };
+  const handleOpenCart = () => setActiveModal("cart");
+  const handleOpenNotif = () => setActiveModal("notif");
+  const handleOpenAccount = () => setActiveModal("account");
 
   const handleOpenDetail = (menu) => {
     setSelectedProduct(menu);
     setActiveModal("detail");
     const isDrink =
       menu.category === "Coffee" || menu.category === "Non-Coffee";
-
     setCustomization({
       variant: isDrink ? "Normal Sugar" : "Sedang",
       size: "Regular",
@@ -280,9 +246,7 @@ export default function CustomerMenu() {
   const updateQuantity = (index, delta) => {
     const newCart = [...cart];
     newCart[index].quantity += delta;
-    if (newCart[index].quantity <= 0) {
-      newCart.splice(index, 1);
-    }
+    if (newCart[index].quantity <= 0) newCart.splice(index, 1);
     setCart(newCart);
   };
 
@@ -292,9 +256,8 @@ export default function CustomerMenu() {
     setCart(newCart);
   };
 
-  const calculateTotal = () => {
-    return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  };
+  const calculateTotal = () =>
+    cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const handleCheckout = async () => {
     if (isSubmitting) return;
@@ -313,7 +276,7 @@ export default function CustomerMenu() {
     try {
       const token = localStorage.getItem("userToken");
 
-      const response = await fetch(`${API_URL}/api/orders`, {
+      const response = await fetch(`${API_BASE_URL}/api/orders`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -365,7 +328,6 @@ export default function CustomerMenu() {
           <h1 className="text-2xl font-serif font-bold tracking-wide">
             Vyna Coffee & Restaurant
           </h1>
-          {/* Greeting cards */}
           <GreetingCard menus={menus} onSelectMenu={handleOpenDetail} />
         </div>
 
@@ -383,7 +345,7 @@ export default function CustomerMenu() {
         </div>
       </div>
 
-      {/* BANNER advertisement */}
+      {/* BANNER PROMO */}
       <PromoCarousel />
 
       {/* FILTER KATEGORI */}
@@ -398,7 +360,7 @@ export default function CustomerMenu() {
             className="flex overflow-x-auto gap-2 scrollbar-none py-1 px-1 w-full items-center cursor-grab active:cursor-grabbing"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
-            {categories.map((cat) => (
+            {CATEGORIES.map((cat) => (
               <button
                 key={cat.key}
                 onClick={() =>
@@ -519,17 +481,15 @@ export default function CustomerMenu() {
           isOpen={activeModal === "account"}
           onClose={() => setActiveModal(null)}
           onReorder={(reorderItems) => {
-            setCart((prevCart) => {
-              // Gabungkan atau tambahkan item reorder ke keranjang
-              return [...prevCart, ...reorderItems];
-            });
+            setCart((prevCart) => [...prevCart, ...reorderItems]);
           }}
         />
       )}
+
       {/* HALAMAN NOTIFIKASI */}
       <NotificationModal isOpen={isNotifOpen} onClose={handleCloseAllModals} />
 
-      {/* CART MODAL / DRAWER (Z-Index di bawah BottomNav agar BottomNav tetap stay di depan) */}
+      {/* CART DRAWER */}
       <div className="relative z-40">
         <CartDrawer
           isOpen={isCartOpen}
@@ -542,7 +502,7 @@ export default function CustomerMenu() {
         />
       </div>
 
-      {/* BOTTOM NAVIGATION BAR (Z-Index 50 agar selalu stay paling depan dan bisa diklik) */}
+      {/* BOTTOM NAVIGATION */}
       <div className="relative z-50">
         <BottomNav
           cartItemCount={cart.reduce((sum, item) => sum + item.quantity, 0)}
