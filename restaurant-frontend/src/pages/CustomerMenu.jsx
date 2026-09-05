@@ -174,33 +174,6 @@ export default function CustomerMenu() {
     handleOpenDetail(menu);
   };
 
-  // --- Drag vertikal (konten modal detail) ---
-  const handleModalMouseDown = (e) => {
-    if (e.target.closest("button, input")) return;
-    setIsModalDragging(true);
-    setModalDragStartY(e.pageY);
-    setModalDragStartScrollTop(modalContentRef.current.scrollTop);
-  };
-
-  useEffect(() => {
-    if (!isModalDragging) return;
-
-    const handleModalMouseMove = (e) => {
-      if (!modalContentRef.current) return;
-      modalContentRef.current.scrollTop =
-        modalDragStartScrollTop - (e.pageY - modalDragStartY);
-    };
-    const handleModalMouseUp = () => setIsModalDragging(false);
-
-    window.addEventListener("mousemove", handleModalMouseMove);
-    window.addEventListener("mouseup", handleModalMouseUp);
-
-    return () => {
-      window.removeEventListener("mousemove", handleModalMouseMove);
-      window.removeEventListener("mouseup", handleModalMouseUp);
-    };
-  }, [isModalDragging, modalDragStartY, modalDragStartScrollTop]);
-
   // --- Derived state ---
   const randomMenus = useMemo(() => {
     if (menus.length === 0) return [];
@@ -313,7 +286,7 @@ export default function CustomerMenu() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fcf9f5] text-[#5c1f2e] p-4 md:p-10 font-sans pb-32 relative">
+    <div className="min-h-screen bg-[#fcf9f5] text-[#5c1f2e] font-sans pb-32 relative">
       <ToastContainer
         position="top-center"
         autoClose={3000}
@@ -322,126 +295,119 @@ export default function CustomerMenu() {
         theme="light"
       />
 
-      {/* HEADER & NOMOR MEJA */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-[#e8ded2] pb-6 mb-8 gap-4">
-        <div>
-          <h1 className="text-2xl font-serif font-bold tracking-wide">
-            Vyna Coffee & Restaurant
-          </h1>
-          <GreetingCard menus={menus} onSelectMenu={handleOpenDetail} />
-        </div>
-
-        <div className="flex items-center gap-3 bg-white p-3 rounded-2xl shadow-sm border border-[#e8ded2]">
-          <span className="text-sm font-semibold">Nomor Meja:</span>
-          <input
-            type="number"
-            min="1"
-            max="100"
-            value={tableNumber}
-            onChange={handleTableChange}
-            placeholder="No. Meja"
-            className="w-20 px-3 py-1.5 bg-[#fcf9f5] border border-[#e8ded2] rounded-xl text-center font-bold focus:outline-none focus:ring-2 focus:ring-[#5c1f2e]"
-          />
-        </div>
-      </div>
-
-      {/* BANNER PROMO */}
+      {/* 1. BANNER PROMO FULL-BLEED (Mentok Kiri-Kanan Tanpa Jarak) */}
+      {/* 1. PROMO CAROUSEL (Sudah full-width & ada lengkungan bawah otomatis) */}
       <PromoCarousel />
 
-      {/* FILTER KATEGORI */}
-      <div className="relative flex items-center mb-8">
-        <div className="relative mb-0 w-full select-none">
-          <div
-            ref={scrollContainerRef}
-            onMouseDown={handleMouseDown}
-            onMouseLeave={handleMouseLeave}
-            onMouseUp={handleMouseUp}
-            onMouseMove={handleMouseMove}
-            className="flex overflow-x-auto gap-2 scrollbar-none py-1 px-1 w-full items-center cursor-grab active:cursor-grabbing"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-          >
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat.key}
-                onClick={() =>
-                  setActiveCategory(activeCategory === cat.key ? null : cat.key)
-                }
-                className={`px-5 py-2.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-300 cursor-pointer flex-shrink-0 ${
-                  activeCategory === cat.key
-                    ? "bg-[#5c1f2e] text-white shadow-md scale-105"
-                    : "bg-white text-[#5c1f2e] border border-[#e8ded2] hover:bg-[#e8ded2]/40"
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
-          </div>
-        </div>
+      {/* 2. GREETING CARD MENIMPA LENGKUNGAN */}
+      <div className="px-4 sm:px-6 -mt-12 sm:-mt-16">
+        <GreetingCard
+          menus={menus}
+          onSelectMenu={handleOpenDetail}
+          tableNumber={tableNumber}
+          onTableChange={handleTableChange}
+        />
       </div>
 
-      <p className="text-xs font-semibold opacity-60 mb-4 -mt-4">
-        {activeCategory
-          ? `Menampilkan kategori: ${activeCategory}`
-          : "Rekomendasi untuk Anda"}
-      </p>
-
-      {/* GRID MENU */}
-      <div
-        onMouseDown={handleGridMouseDown}
-        className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 select-none ${
-          isPageDragging ? "cursor-grabbing" : "cursor-grab"
-        }`}
-      >
-        {filteredMenus.length > 0 ? (
-          filteredMenus.map((menu, index) => (
+      {/* 3. KONTEN UTAMA DI BAWAHNYA (Diberi padding lagi agar rapi) */}
+      <div className="px-4 sm:px-6 pt-6">
+        {/* FILTER KATEGORI */}
+        <div className="relative flex items-center mb-6">
+          <div className="relative mb-0 w-full select-none">
             <div
-              key={menu._id}
-              data-aos="fade-up"
-              data-aos-delay={index * 50}
-              onClick={() => handleCardClick(menu)}
-              className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-[#e8ded2]/60 flex flex-col justify-between group cursor-pointer"
+              ref={scrollContainerRef}
+              onMouseDown={handleMouseDown}
+              onMouseLeave={handleMouseLeave}
+              onMouseUp={handleMouseUp}
+              onMouseMove={handleMouseMove}
+              className="flex overflow-x-auto gap-2 scrollbar-none py-1 px-1 w-full items-center cursor-grab active:cursor-grabbing"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
-              <div>
-                <div className="w-full h-48 overflow-hidden bg-gray-100">
-                  <img
-                    src={
-                      menu.image_url ||
-                      "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"
-                    }
-                    alt={menu.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    draggable={false}
-                  />
-                </div>
-
-                <div className="p-5">
-                  <span className="text-xs uppercase tracking-wider bg-[#e8ded2]/50 text-[#5c1f2e] px-2.5 py-1 rounded-md font-semibold">
-                    {menu.category}
-                  </span>
-                  <h3 className="text-lg font-bold font-serif mt-2 mb-1">
-                    {menu.name}
-                  </h3>
-                  <p className="text-base font-bold text-[#5c1f2e]">
-                    Rp {menu.price?.toLocaleString("id-ID")}
-                  </p>
-                </div>
-              </div>
-
-              <div className="p-5 pt-0">
-                <button className="w-full py-2.5 bg-[#5c1f2e] text-white rounded-2xl font-semibold hover:bg-[#431420] transition-colors duration-200 cursor-pointer shadow-sm active:scale-95 text-xs">
-                  Pilih Menu 🔍
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat.key}
+                  onClick={() =>
+                    setActiveCategory(
+                      activeCategory === cat.key ? null : cat.key,
+                    )
+                  }
+                  className={`px-5 py-2.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-300 cursor-pointer flex-shrink-0 ${
+                    activeCategory === cat.key
+                      ? "bg-[#5c1f2e] text-white shadow-md scale-105"
+                      : "bg-white text-[#5c1f2e] border border-[#e8ded2] hover:bg-[#e8ded2]/40"
+                  }`}
+                >
+                  {cat.label}
                 </button>
-              </div>
+              ))}
             </div>
-          ))
-        ) : (
-          <div className="col-span-full text-center py-12">
-            <p className="text-sm text-stone-500">
-              Belum ada menu untuk kategori <strong>{activeCategory}</strong> di
-              database.
-            </p>
           </div>
-        )}
+        </div>
+
+        <p className="text-xs font-semibold opacity-60 mb-4">
+          {activeCategory
+            ? `Menampilkan kategori: ${activeCategory}`
+            : "Rekomendasi untuk Anda"}
+        </p>
+
+        {/* GRID MENU */}
+        <div
+          onMouseDown={handleGridMouseDown}
+          className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 select-none ${
+            isPageDragging ? "cursor-grabbing" : "cursor-grab"
+          }`}
+        >
+          {filteredMenus.length > 0 ? (
+            filteredMenus.map((menu, index) => (
+              <div
+                key={menu._id}
+                data-aos="fade-up"
+                data-aos-delay={index * 50}
+                onClick={() => handleCardClick(menu)}
+                className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-[#e8ded2]/60 flex flex-col justify-between group cursor-pointer"
+              >
+                <div>
+                  <div className="w-full h-48 overflow-hidden bg-gray-100">
+                    <img
+                      src={
+                        menu.image_url ||
+                        "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"
+                      }
+                      alt={menu.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      draggable={false}
+                    />
+                  </div>
+
+                  <div className="p-5">
+                    <span className="text-xs uppercase tracking-wider bg-[#e8ded2]/50 text-[#5c1f2e] px-2.5 py-1 rounded-md font-semibold">
+                      {menu.category}
+                    </span>
+                    <h3 className="text-lg font-bold font-serif mt-2 mb-1">
+                      {menu.name}
+                    </h3>
+                    <p className="text-base font-bold text-[#5c1f2e]">
+                      Rp {menu.price?.toLocaleString("id-ID")}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-5 pt-0">
+                  <button className="w-full py-2.5 bg-[#5c1f2e] text-white rounded-2xl font-semibold hover:bg-[#431420] transition-colors duration-200 cursor-pointer shadow-sm active:scale-95 text-xs">
+                    Pilih Menu 🔍
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="col-span-full text-center py-12">
+              <p className="text-sm text-stone-500">
+                Belum ada menu untuk kategori <strong>{activeCategory}</strong>{" "}
+                di database.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* MODAL DETAIL & KUSTOMISASI PRODUK */}
@@ -503,16 +469,19 @@ export default function CustomerMenu() {
       </div>
 
       {/* BOTTOM NAVIGATION */}
-      <div className="relative z-50">
-        <BottomNav
-          cartItemCount={cart.reduce((sum, item) => sum + item.quantity, 0)}
-          onOpenCart={handleOpenCart}
-          onOpenNotif={handleOpenNotif}
-          onOpenAccount={handleOpenAccount}
-          onGoHome={handleCloseAllModals}
-          activeMenu={activeModal || "home"}
-        />
-      </div>
+      {/* BOTTOM NAVIGATION (Disembunyikan otomatis saat mode Detail Produk aktif) */}
+      {activeModal !== "detail" && (
+        <div className="relative z-50">
+          <BottomNav
+            cartItemCount={cart.reduce((sum, item) => sum + item.quantity, 0)}
+            onOpenCart={handleOpenCart}
+            onOpenNotif={handleOpenNotif}
+            onOpenAccount={handleOpenAccount}
+            onGoHome={handleCloseAllModals}
+            activeMenu={activeModal || "home"}
+          />
+        </div>
+      )}
     </div>
   );
 }
