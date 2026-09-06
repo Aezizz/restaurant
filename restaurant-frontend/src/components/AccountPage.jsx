@@ -14,7 +14,11 @@ export default function AccountPage({ isOpen, onClose, onReorder }) {
     localStorage.getItem("userName") || "",
   );
   const [isLoginMode, setIsLoginMode] = useState(true);
-  const [formData, setFormData] = useState({ name: "", email: "", password: "" });
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("history");
   const [orderHistory, setOrderHistory] = useState([]);

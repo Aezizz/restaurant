@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom"; // Pastikan sudah import Link atau gunakan navigasi yang sesuai
 
 export default function AuthForm({
   isLoginMode,
@@ -54,6 +55,18 @@ export default function AuthForm({
           placeholder="••••••••"
           className="w-full text-xs p-3 bg-stone-50 border border-[#e8ded2] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5c1f2e]"
         />
+
+        {/* Tombol Lupa Password (Hanya muncul saat mode login) */}
+        {isLoginMode && (
+          <div className="flex justify-end mt-1.5">
+            <Link
+              to="/reset-password"
+              className="text-[11px] font-semibold text-stone-500 hover:text-[#5c1f2e] transition-colors"
+            >
+              Lupa kata sandi? 🔑
+            </Link>
+          </div>
+        )}
       </div>
 
       <button

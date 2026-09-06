@@ -5,6 +5,7 @@ import CustomerMenu from "./pages/CustomerMenu";
 import KitchenDashboard from "./pages/KitchenDashboard";
 import AOS from "aos";
 import "aos/dist/aos.css"; // Wajib import CSS-nya
+import ResetPasswordPage from "./pages/ResetPasswordPage"; // Sesuaikan path foldernya ya kalau beda folder
 
 function App() {
   useEffect(() => {
@@ -23,6 +24,8 @@ function App() {
         {/* Halaman Menu Pelanggan */}
         <Route path="/menu" element={<CustomerMenu />} />
 
+        {/*Forgot Password Page  */}
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         {/* Halaman Dapur / Kasir */}
         <Route path="/kitchen" element={<KitchenDashboard />} />
       </Routes>
