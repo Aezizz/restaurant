@@ -1,4 +1,5 @@
 import React from "react";
+import { Package, Star, RotateCcw } from "lucide-react";
 
 export default function OrderHistoryTab({
   loadingOrders,
@@ -16,8 +17,8 @@ export default function OrderHistoryTab({
 
   if (orderHistory.length === 0) {
     return (
-      <div className="text-center py-12 bg-stone-50 rounded-2xl border border-dashed border-[#e8ded2]">
-        <span className="text-3xl block mb-2">📦</span>
+      <div className="text-center py-12 bg-stone-50 rounded-2xl border border-dashed border-[#e8ded2] flex flex-col items-center justify-center">
+        <Package className="w-8 h-8 text-stone-300 mb-2 stroke-[1.5]" />
         <p className="text-xs text-stone-400">
           Belum ada riwayat pesanan tercatat di akun ini.
         </p>
@@ -39,12 +40,13 @@ export default function OrderHistoryTab({
             {order.status === "completed" && (
               <button
                 onClick={() => handleOpenRatingModal(order)}
-                className="px-3 py-1.5 bg-amber-100 text-amber-800 text-[11px] font-bold rounded-xl hover:bg-amber-200 transition-colors cursor-pointer shadow-sm flex items-center gap-1"
+                className="px-3 py-1.5 bg-amber-100 text-amber-800 text-[11px] font-bold rounded-xl hover:bg-amber-200 transition-colors cursor-pointer shadow-sm flex items-center gap-1.5"
               >
+                <Star className="w-3.5 h-3.5 text-amber-600 fill-amber-600" />
                 <span>
                   {order.review?.rating
-                    ? `⭐ ${order.review.rating}/5 Ulas`
-                    : "Beri Ulasan ⭐"}
+                    ? `${order.review.rating}/5 Ulas`
+                    : "Beri Ulasan"}
                 </span>
               </button>
             )}
@@ -69,9 +71,10 @@ export default function OrderHistoryTab({
             </span>
             <button
               onClick={() => handleReorder(order.items)}
-              className="px-3 py-1.5 bg-[#5c1f2e] text-white text-[11px] font-bold rounded-xl hover:bg-[#431420] transition-colors cursor-pointer shadow-sm flex items-center gap-1"
+              className="px-3 py-1.5 bg-[#5c1f2e] text-white text-[11px] font-bold rounded-xl hover:bg-[#431420] transition-colors cursor-pointer shadow-sm flex items-center gap-1.5"
             >
-              <span>Pesan Lagi 🛒</span>
+              <span>Pesan Lagi</span>
+              <RotateCcw className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>

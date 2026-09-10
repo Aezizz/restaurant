@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { X } from "lucide-react";
 
 export default function ProductDetailModal({ product, onClose, onAddToCart }) {
   const isDrink =
@@ -103,7 +104,7 @@ export default function ProductDetailModal({ product, onClose, onAddToCart }) {
           onClick={onClose}
           className="w-10 h-10 rounded-full bg-white border border-[#e8ded2] flex items-center justify-center text-[#5c1f2e] hover:bg-[#e8ded2]/30 transition-colors cursor-pointer shadow-sm"
         >
-          ✕
+          <X className="w-5 h-5" />
         </button>
         <h2 className="text-sm font-bold font-serif tracking-wide truncate max-w-[70%]">
           {product.name}

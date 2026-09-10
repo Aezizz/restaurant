@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { ArrowLeft, KeyRound, Mail, Lock, Send } from "lucide-react";
 import { API_BASE_URL } from "../services/socket";
 import { toast } from "react-toastify";
 
@@ -88,16 +89,18 @@ export default function ResetPasswordPage() {
           <button
             type="button"
             onClick={() => navigate("/")} // Mengarahkan kembali ke halaman awal/login
-            className="text-xs text-stone-500 hover:text-[#5c1f2e] font-semibold cursor-pointer transition-colors"
+            className="text-xs text-stone-500 hover:text-[#5c1f2e] font-semibold cursor-pointer transition-colors inline-flex items-center gap-1.5"
           >
-            ← Kembali ke Beranda / Masuk
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Kembali ke Beranda / Masuk</span>
           </button>
         </div>
         {/* KONDISI A: Jika user belum klik link dari email (Form Request Email) */}
         {!token ? (
           <div>
-            <h2 className="text-xl font-bold font-serif text-center mb-2">
-              Lupa Password? 🔑
+            <h2 className="text-xl font-bold font-serif text-center mb-2 flex items-center justify-center gap-2">
+              <span>Lupa Password?</span>
+              <KeyRound className="w-5 h-5 text-[#5c1f2e]" />
             </h2>
             <p className="text-xs text-stone-500 text-center mb-6">
               Masukkan email terdaftar, kami akan kirimkan tautan pemulihan ke
@@ -106,8 +109,9 @@ export default function ResetPasswordPage() {
 
             {isRequested ? (
               <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl text-center space-y-2">
-                <p className="text-xs font-bold text-amber-800">
-                  Email Berhasil Dikirim! ✉️
+                <p className="text-xs font-bold text-amber-800 flex items-center justify-center gap-1.5">
+                  <Mail className="w-4 h-4" />
+                  <span>Email Berhasil Dikirim!</span>
                 </p>
                 <p className="text-[11px] text-stone-600">
                   Cek kotak masuk atau folder spam di email{" "}
@@ -133,9 +137,16 @@ export default function ResetPasswordPage() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full py-3.5 bg-[#5c1f2e] text-white rounded-2xl font-bold text-xs uppercase tracking-wider hover:bg-[#431420] transition-colors cursor-pointer shadow-md"
+                  className="w-full py-3.5 bg-[#5c1f2e] text-white rounded-2xl font-bold text-xs uppercase tracking-wider hover:bg-[#431420] transition-colors cursor-pointer shadow-md flex items-center justify-center gap-2"
                 >
-                  {isLoading ? "Mengirim..." : "Kirim Tautan Reset"}
+                  {isLoading ? (
+                    "Mengirim..."
+                  ) : (
+                    <>
+                      <span>Kirim Tautan Reset</span>
+                      <Send className="w-4 h-4" />
+                    </>
+                  )}
                 </button>
               </form>
             )}
@@ -143,8 +154,9 @@ export default function ResetPasswordPage() {
         ) : (
           /* KONDISI B: Jika user sudah klik link dari email dan membawa token (Form Password Baru) */
           <div>
-            <h2 className="text-xl font-bold font-serif text-center mb-2">
-              Buat Password Baru 🔒
+            <h2 className="text-xl font-bold font-serif text-center mb-2 flex items-center justify-center gap-2">
+              <span>Buat Password Baru</span>
+              <Lock className="w-5 h-5 text-[#5c1f2e]" />
             </h2>
             <p className="text-xs text-stone-500 text-center mb-6">
               Silakan masukkan password baru untuk akun Vyna Coffee kamu.
@@ -180,9 +192,16 @@ export default function ResetPasswordPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3.5 bg-[#5c1f2e] text-white rounded-2xl font-bold text-xs uppercase tracking-wider hover:bg-[#431420] transition-colors cursor-pointer shadow-md"
+                className="w-full py-3.5 bg-[#5c1f2e] text-white rounded-2xl font-bold text-xs uppercase tracking-wider hover:bg-[#431420] transition-colors cursor-pointer shadow-md flex items-center justify-center gap-2"
               >
-                {isLoading ? "Menyimpan..." : "Simpan Password Baru"}
+                {isLoading ? (
+                  "Menyimpan..."
+                ) : (
+                  <>
+                    <span>Simpan Password Baru</span>
+                    <Lock className="w-4 h-4" />
+                  </>
+                )}
               </button>
             </form>
           </div>

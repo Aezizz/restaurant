@@ -1,4 +1,5 @@
 import React from "react";
+import { AlertTriangle } from "lucide-react";
 
 export default function ConfirmModal({
   isOpen,
@@ -15,8 +16,8 @@ export default function ConfirmModal({
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-6 text-center animate-zoom-in border border-[#e8ded2]">
         {/* Ikon / Header */}
-        <div className="w-12 h-12 bg-[#5c1f2e]/10 text-[#5c1f2e] rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-          ⚠️
+        <div className="w-12 h-12 bg-[#5c1f2e]/10 text-[#5c1f2e] rounded-full flex items-center justify-center mx-auto mb-4">
+          <AlertTriangle className="w-6 h-6 text-[#5c1f2e]" />
         </div>
 
         <h3 className="text-lg font-bold font-serif text-[#5c1f2e] mb-2">

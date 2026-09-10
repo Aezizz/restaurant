@@ -1,4 +1,5 @@
 import React from "react";
+import { Star, X, Send } from "lucide-react";
 
 export default function RatingModal({
   isOpen,
@@ -22,9 +23,9 @@ export default function RatingModal({
           </h3>
           <button
             onClick={onClose}
-            className="text-stone-400 hover:text-black font-bold text-sm cursor-pointer"
+            className="text-stone-400 hover:text-[#5c1f2e] p-1 rounded-full hover:bg-stone-100 transition-colors cursor-pointer"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -35,24 +36,28 @@ export default function RatingModal({
               type="button"
               key={star}
               onClick={() => setRatingScore(star)}
-              className={`text-2xl cursor-pointer transition-transform hover:scale-110 ${
-                star <= ratingScore ? "text-amber-400" : "text-stone-200"
-              }`}
+              className="p-1 cursor-pointer transition-transform hover:scale-110"
             >
-              ★
+              <Star
+                className={`w-6 h-6 transition-colors ${
+                  star <= ratingScore
+                    ? "text-amber-400 fill-amber-400"
+                    : "text-stone-200 fill-stone-100"
+                }`}
+              />
             </button>
           ))}
         </div>
         <p className="text-center text-xs font-semibold text-stone-600">
           {ratingScore === 5
-            ? "Sempurna! Luar biasa 🤩"
+            ? "Sempurna! Sangat Memuaskan"
             : ratingScore === 4
-              ? "Puas banget! 👍"
+              ? "Sangat Puas"
               : ratingScore === 3
-                ? "Cukup baik 🙂"
+                ? "Cukup Baik"
                 : ratingScore === 2
-                  ? "Kurang memuaskan 🙁"
-                  : "Buruk 😞"}
+                  ? "Kurang Memuaskan"
+                  : "Perlu Perbaikan"}
         </p>
 
         {/* Kolom Komentar */}
@@ -82,9 +87,16 @@ export default function RatingModal({
             type="button"
             disabled={submittingRating}
             onClick={submitRating}
-            className="flex-1 py-2.5 bg-[#5c1f2e] text-white rounded-xl font-bold text-xs hover:bg-[#431420] transition-colors cursor-pointer shadow-sm"
+            className="flex-1 py-2.5 bg-[#5c1f2e] text-white rounded-xl font-bold text-xs hover:bg-[#431420] transition-colors cursor-pointer shadow-sm flex items-center justify-center gap-1.5"
           >
-            {submittingRating ? "Menyimpan..." : "Kirim Ulasan 🚀"}
+            {submittingRating ? (
+              "Menyimpan..."
+            ) : (
+              <>
+                <span>Kirim Ulasan</span>
+                <Send className="w-3.5 h-3.5" />
+              </>
+            )}
           </button>
         </div>
       </div>

@@ -136,7 +136,7 @@ export function useKitchenOrders() {
       const result = await exportOrdersApi(ordersToExport);
       if (result.success) {
         toast.success(
-          result.message || "Rekap berhasil dikirim ke Google Sheets! 📊",
+          result.message || "Rekap berhasil dikirim ke Google Sheets!",
         );
         return true;
       } else {
@@ -177,7 +177,7 @@ export function useKitchenOrders() {
       table_number: tableNumber,
     });
     toast.success(
-      `Notifikasi berhasil dikirim ulang ke Meja #${tableNumber}! 🔔`,
+      `Notifikasi berhasil dikirim ulang ke Meja #${tableNumber}!`,
     );
   };
 

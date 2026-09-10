@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Search } from "lucide-react";
 import AccountPage from "../components/AccountPage";
 import BottomNav from "../components/BottomNav";
 import PromoCarousel from "../components/PromoCarousel";
@@ -9,6 +10,8 @@ import NotificationModal from "../components/NotificationModal";
 import CartDrawer from "../components/CartDrawer";
 import GreetingCard from "../components/GreetingCard";
 import { socket, API_BASE_URL } from "../services/socket";
+import VoucherButton from "../components/VoucherButton";
+import VoucherModal from "../components/VoucherModal";
 
 const RANDOM_DISPLAY_COUNT = 8;
 
@@ -29,6 +32,9 @@ export default function CustomerMenu() {
   const [tableNumber, setTableNumber] = useState(
     localStorage.getItem("tableNumber") || "",
   );
+  const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false);
+  const [hasNewVoucher, setHasNewVoucher] = useState(true); // True kalau ada voucher baru
+  const isLoggedIn = Boolean(localStorage.getItem("userToken")); // Cek status login dari token
   const [cart, setCart] = useState([]);
   const [activeModal, setActiveModal] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -104,7 +110,7 @@ export default function CustomerMenu() {
     socket.on("order-ready", (data) => {
       if (Number(data.table_number) === Number(tableNumber)) {
         toast.success(
-          `🔔 Pesanan Siap! Yeay! Pesanan untuk Meja #${data.table_number} sudah siap diambil di kasir! ☕🚀`,
+          `Pesanan Siap! Pesanan untuk Meja #${data.table_number} sudah siap diambil di kasir!`,
           {
             position: "top-center",
             autoClose: 5000,
@@ -295,6 +301,23 @@ export default function CustomerMenu() {
         theme="light"
       />
 
+      <VoucherButton
+        onClick={() => {
+          setIsVoucherModalOpen(true);
+          setHasNewVoucher(false);
+        }}
+        hasNewVoucher={hasNewVoucher}
+        isLoggedIn={isLoggedIn}
+      />
+      <VoucherModal
+        isOpen={isVoucherModalOpen}
+        onClose={() => setIsVoucherModalOpen(false)}
+        isLoggedIn={isLoggedIn}
+        onNavigateLogin={() => {
+          setIsVoucherModalOpen(false);
+          handleOpenAccount();
+        }}
+      />
       {/* 1. BANNER PROMO FULL-BLEED (Mentok Kiri-Kanan Tanpa Jarak) */}
       {/* 1. PROMO CAROUSEL (Sudah full-width & ada lengkungan bawah otomatis) */}
       <PromoCarousel />
@@ -393,8 +416,9 @@ export default function CustomerMenu() {
                 </div>
 
                 <div className="p-5 pt-0">
-                  <button className="w-full py-2.5 bg-[#5c1f2e] text-white rounded-2xl font-semibold hover:bg-[#431420] transition-colors duration-200 cursor-pointer shadow-sm active:scale-95 text-xs">
-                    Pilih Menu 🔍
+                  <button className="w-full py-2.5 bg-[#5c1f2e] text-white rounded-2xl font-semibold hover:bg-[#431420] transition-colors duration-200 cursor-pointer shadow-sm active:scale-95 text-xs flex items-center justify-center gap-1.5">
+                    <span>Pilih Menu</span>
+                    <Search className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
@@ -430,7 +454,7 @@ export default function CustomerMenu() {
             }
 
             handleCloseAllModals();
-            toast.success("Berhasil ditambahkan ke keranjang! 🛒", {
+            toast.success("Berhasil ditambahkan ke keranjang!", {
               style: {
                 background: "#fcf9f5",
                 color: "#5c1f2e",

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import { X, LogOut, History, Settings } from "lucide-react";
 import { API_BASE_URL } from "../services/socket";
 import AuthForm from "./account/AuthForm";
 import OrderHistoryTab from "./account/OrderHistoryTab";
@@ -74,9 +75,9 @@ export default function AccountPage({ isOpen, onClose, onReorder }) {
           localStorage.setItem("userName", nameValue);
           setToken(tokenValue);
           setUserName(nameValue);
-          toast.success("Berhasil masuk! 🎉");
+          toast.success("Berhasil masuk!");
         } else {
-          toast.success("Registrasi berhasil, silakan masuk! ✨");
+          toast.success("Registrasi berhasil, silakan masuk!");
           setIsLoginMode(true);
         }
       } else {
@@ -125,7 +126,7 @@ export default function AccountPage({ isOpen, onClose, onReorder }) {
       const result = await response.json();
 
       if (response.ok) {
-        toast.success("Terima kasih! Ulasan berhasil disimpan ⭐");
+        toast.success("Terima kasih! Ulasan berhasil disimpan.");
         setRatingModalOpen(false);
         setOrderHistory(
           orderHistory.map((ord) =>
@@ -146,7 +147,7 @@ export default function AccountPage({ isOpen, onClose, onReorder }) {
   const handleReorder = (orderItems) => {
     if (onReorder) onReorder(orderItems);
     toast.success(
-      "Menu dari pesanan sebelumnya berhasil dimasukkan ke keranjang! 🛒",
+      "Menu dari pesanan sebelumnya berhasil dimasukkan ke keranjang!",
     );
     onClose();
   };
@@ -170,9 +171,9 @@ export default function AccountPage({ isOpen, onClose, onReorder }) {
             </div>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-black font-bold text-lg cursor-pointer bg-stone-100 w-8 h-8 rounded-full flex items-center justify-center border border-[#e8ded2]"
+              className="text-stone-400 hover:text-[#5c1f2e] p-1 rounded-full hover:bg-stone-100 transition-colors cursor-pointer"
             >
-              ✕
+              <X className="w-5 h-5" />
             </button>
           </div>
 
@@ -196,32 +197,35 @@ export default function AccountPage({ isOpen, onClose, onReorder }) {
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-bold rounded-xl transition-colors cursor-pointer border border-rose-200"
+                  className="px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-bold rounded-xl transition-colors cursor-pointer border border-rose-200 flex items-center gap-1.5"
                 >
-                  Keluar 🚪
+                  <span>Keluar</span>
+                  <LogOut className="w-3.5 h-3.5" />
                 </button>
               </div>
 
               <div className="flex bg-stone-100 p-1 rounded-xl">
                 <button
                   onClick={() => setActiveTab("history")}
-                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                     activeTab === "history"
                       ? "bg-white text-[#5c1f2e] shadow-sm"
                       : "text-stone-500"
                   }`}
                 >
-                  📜 Riwayat Pesanan
+                  <History className="w-3.5 h-3.5" />
+                  <span>Riwayat Pesanan</span>
                 </button>
                 <button
                   onClick={() => setActiveTab("settings")}
-                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                     activeTab === "settings"
                       ? "bg-white text-[#5c1f2e] shadow-sm"
                       : "text-stone-500"
                   }`}
                 >
-                  ⚙️ Pengaturan Akun
+                  <Settings className="w-3.5 h-3.5" />
+                  <span>Pengaturan Akun</span>
                 </button>
               </div>
 

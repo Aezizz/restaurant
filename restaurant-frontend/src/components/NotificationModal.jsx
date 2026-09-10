@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Bell, X } from "lucide-react";
 import { socket, API_BASE_URL } from "../services/socket";
 
 export default function NotificationModal({ isOpen, onClose }) {
@@ -57,21 +58,21 @@ export default function NotificationModal({ isOpen, onClose }) {
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex justify-end">
       {alertBanner && (
         <div className="absolute top-4 left-4 right-4 z-50 max-w-md mx-auto bg-[#fcf9f5] border border-[#e8ded2] rounded-2xl shadow-2xl p-4 flex items-start gap-3 animate-bounce-short">
-          <span className="text-xl">🔔</span>
+          <Bell className="w-5 h-5 text-[#5c1f2e] shrink-0 mt-0.5" />
           <div className="flex-1">
             <h4 className="font-bold text-xs text-[#5c1f2e] uppercase tracking-wider">
               Pesanan Siap!
             </h4>
             <p className="text-xs text-stone-600 mt-0.5 leading-relaxed">
-              Yeay! Pesanan untuk Meja #{tableNumber} (No. Antrean #
-              {alertBanner.queue}) sudah siap diambil di kasir! ☕🚀
+              Pesanan untuk Meja #{tableNumber} (No. Antrean #
+              {alertBanner.queue}) sudah siap diambil di kasir!
             </p>
           </div>
           <button
             onClick={() => setAlertBanner(null)}
-            className="text-stone-400 hover:text-stone-700 text-xs font-bold px-2 py-1 rounded-lg bg-stone-100 cursor-pointer"
+            className="text-stone-400 hover:text-stone-700 p-1 rounded-lg bg-stone-100 cursor-pointer"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         </div>
       )}
@@ -79,20 +80,21 @@ export default function NotificationModal({ isOpen, onClose }) {
       <div className="w-full max-w-md bg-white h-full p-6 pb-24 md:pb-6 shadow-2xl flex flex-col justify-between overflow-y-auto">
         <div>
           <div className="flex justify-between items-center border-b border-[#e8ded2] pb-4 mb-6">
-            <h2 className="text-xl font-bold font-serif text-[#5c1f2e]">
-              Notifikasi Pesanan
+            <h2 className="text-xl font-bold font-serif text-[#5c1f2e] flex items-center gap-2">
+              <Bell className="w-5 h-5" />
+              <span>Notifikasi Pesanan</span>
             </h2>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-black font-bold text-lg cursor-pointer bg-stone-100 w-8 h-8 rounded-full flex items-center justify-center border border-[#e8ded2]"
+              className="text-stone-400 hover:text-[#5c1f2e] p-1 rounded-full hover:bg-stone-100 transition-colors cursor-pointer"
             >
-              ✕
+              <X className="w-5 h-5" />
             </button>
           </div>
 
           {orders.length === 0 ? (
-            <div className="text-center mt-20 text-stone-500">
-              <span className="text-4xl mb-4 block">🔔</span>
+            <div className="text-center mt-20 text-stone-400 flex flex-col items-center">
+              <Bell className="w-12 h-12 mb-3 text-stone-300 stroke-[1.5]" />
               <p className="text-sm">
                 Belum ada riwayat pesanan aktif untuk Meja #{tableNumber}.
               </p>

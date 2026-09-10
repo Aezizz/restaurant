@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Bell, X } from "lucide-react";
 import { io } from "socket.io-client";
 
 // Base URL API, diambil dari .env (VITE_API_URL). Kalau .env gak ada / lupa
@@ -35,16 +36,22 @@ export default function NotificationPage({ onClose }) {
   return (
     <div className="fixed inset-0 z-50 bg-[#fcf9f5] p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold font-serif">Notifikasi Pesanan</h2>
-        <button onClick={onClose} className="text-2xl font-bold cursor-pointer">
-          ✕
+        <h2 className="text-xl font-bold font-serif text-[#5c1f2e] flex items-center gap-2">
+          <Bell className="w-5 h-5" />
+          <span>Notifikasi Pesanan</span>
+        </h2>
+        <button
+          onClick={onClose}
+          className="text-stone-400 hover:text-[#5c1f2e] p-1 rounded-full hover:bg-stone-100 transition-colors cursor-pointer"
+        >
+          <X className="w-5 h-5" />
         </button>
       </div>
 
       {!orderStatus ? (
-        <div className="text-center mt-20 text-stone-500">
-          <span className="text-4xl mb-4 block">🔔</span>
-          <p>Belum ada riwayat pesanan aktif.</p>
+        <div className="text-center mt-20 text-stone-400 flex flex-col items-center">
+          <Bell className="w-12 h-12 mb-3 text-stone-300 stroke-[1.5]" />
+          <p className="text-sm">Belum ada riwayat pesanan aktif.</p>
         </div>
       ) : (
         <div className="bg-white p-5 rounded-3xl border border-[#e8ded2] shadow-sm">

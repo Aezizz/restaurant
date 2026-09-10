@@ -74,7 +74,7 @@ export default function ReceiptTemplate({ order }) {
       {/* Footer Struk */}
       <div className="text-center text-[10px] space-y-1">
         <p>Terima Kasih Atas Kunjungan Anda!</p>
-        <p>Silakan Menikmati Hidangan Vyna Coffee ☕</p>
+        <p>Silakan Menikmati Hidangan Vyna Coffee</p>
       </div>
     </div>
   );

@@ -16,7 +16,6 @@ connectDB();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
 // Middleware
 app.use(corsMiddleware);
 app.use(express.json());
@@ -28,6 +27,7 @@ const server = http.createServer(app);
 // Socket.io
 const io = configureSocket(server);
 app.use(socketMiddleware(io));
+
 
 // ✅ ROUTES - Pastikan ini benar
 app.use("/api", routes); // Ini akan menangani semua route /api/*

@@ -61,11 +61,7 @@ export default function GreetingCard({
       `}</style>
 
       {/* Elemen Dekorasi Animasi Bintang / Snowball di Pojok Kanan */}
-      <div className="absolute top-4 right-5 pointer-events-none flex items-center space-x-1.5 opacity-80">
-        <span className="text-amber-600 text-xs animate-float">✨</span>
-        <span className="text-amber-500 text-sm animate-shooting">⭐</span>
-        <div className="w-2 h-2 rounded-full bg-amber-400/60 animate-ping absolute -top-1 right-2"></div>
-      </div>
+      <div className="absolute top-4 right-5 pointer-events-none flex items-center space-x-1.5 opacity-80"></div>
 
       {/* Sapaan & Area Kosong Kanan */}
       <div className="flex justify-between items-start gap-3 relative z-10">

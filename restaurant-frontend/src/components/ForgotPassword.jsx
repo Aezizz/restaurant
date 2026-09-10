@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { KeyRound, Send } from "lucide-react";
 import { API_BASE_URL } from "../services/socket";
 import { toast } from "react-toastify";
 
@@ -37,8 +38,9 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen bg-[#fcf9f5] flex items-center justify-center p-4 font-sans text-[#5c1f2e]">
       <div className="bg-white p-8 rounded-3xl border border-[#e8ded2] shadow-lg max-w-md w-full space-y-6">
-        <h2 className="text-xl font-bold font-serif text-center">
-          Lupa Password? 🔑
+        <h2 className="text-xl font-bold font-serif text-center flex items-center justify-center gap-2">
+          <span>Lupa Password?</span>
+          <KeyRound className="w-5 h-5 text-[#5c1f2e]" />
         </h2>
         <p className="text-xs text-stone-500 text-center">
           Masukkan email yang terdaftar, kami akan mengirimkan tautan untuk
@@ -62,9 +64,16 @@ export default function ForgotPasswordPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3.5 bg-[#5c1f2e] text-white rounded-2xl font-bold text-xs uppercase tracking-wider hover:bg-[#431420] transition-colors cursor-pointer shadow-md"
+            className="w-full py-3.5 bg-[#5c1f2e] text-white rounded-2xl font-bold text-xs uppercase tracking-wider hover:bg-[#431420] transition-colors cursor-pointer shadow-md flex items-center justify-center gap-2"
           >
-            {isLoading ? "Mengirim..." : "Kirim Tautan Reset"}
+            {isLoading ? (
+              "Mengirim..."
+            ) : (
+              <>
+                <span>Kirim Tautan Reset</span>
+                <Send className="w-4 h-4" />
+              </>
+            )}
           </button>
         </form>
       </div>

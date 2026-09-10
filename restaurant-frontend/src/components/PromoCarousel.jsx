@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Sparkles } from "lucide-react";
 
 const promoList = [
   {
@@ -20,6 +21,14 @@ const promoList = [
   {
     id: 3,
     title: "Menu Baru: Croissant",
+    subtitle: "Teman ngopi paling pas hari ini",
+    bg: "bg-gradient-to-r from-stone-800 to-stone-950",
+    image:
+      "https://images.unsplash.com/photo-1555507036-ab1f4038808a?q=80&w=600&auto=format&fit=crop",
+  },
+  {
+    id: 4,
+    title: "Dapatkan Diskon Hanya Dengan Log-In",
     subtitle: "Teman ngopi paling pas hari ini",
     bg: "bg-gradient-to-r from-stone-800 to-stone-950",
     image:
@@ -106,7 +115,7 @@ export default function PromoCarousel() {
 
       {/* Space Kosong di Kanan (Desktop) */}
       <div className="hidden md:flex flex-col justify-center items-center h-48 bg-[#fcf9f5]/10 border border-dashed border-white/20 rounded-2xl p-5 text-center text-white/70">
-        <span className="text-2xl mb-1">✨</span>
+        <Sparkles className="w-6 h-6 mb-1 text-amber-200" />
         <p className="text-xs font-semibold">Space Kosong</p>
         <p className="text-[10px] text-white/50 mt-0.5">
           Siap diisi widget / info kafe

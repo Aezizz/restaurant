@@ -1,5 +1,6 @@
 import React from "react";
-import { Link } from "react-router-dom"; // Pastikan sudah import Link atau gunakan navigasi yang sesuai
+import { Link } from "react-router-dom";
+import { KeyRound, LogIn, UserPlus } from "lucide-react";
 
 export default function AuthForm({
   isLoginMode,
@@ -61,9 +62,10 @@ export default function AuthForm({
           <div className="flex justify-end mt-1.5">
             <Link
               to="/reset-password"
-              className="text-[11px] font-semibold text-stone-500 hover:text-[#5c1f2e] transition-colors"
+              className="text-[11px] font-semibold text-stone-500 hover:text-[#5c1f2e] transition-colors flex items-center gap-1"
             >
-              Lupa kata sandi? 🔑
+              <span>Lupa kata sandi?</span>
+              <KeyRound className="w-3 h-3" />
             </Link>
           </div>
         )}
@@ -72,13 +74,21 @@ export default function AuthForm({
       <button
         type="submit"
         disabled={loading}
-        className="w-full py-3 bg-[#5c1f2e] text-white rounded-2xl font-bold text-xs hover:bg-[#431420] transition-colors cursor-pointer shadow-md mt-4 flex items-center justify-center"
+        className="w-full py-3 bg-[#5c1f2e] text-white rounded-2xl font-bold text-xs hover:bg-[#431420] transition-colors cursor-pointer shadow-md mt-4 flex items-center justify-center gap-2"
       >
-        {loading
-          ? "Memproses..."
-          : isLoginMode
-            ? "Masuk 🚀"
-            : "Daftar Sekarang ✨"}
+        {loading ? (
+          "Memproses..."
+        ) : isLoginMode ? (
+          <>
+            <span>Masuk</span>
+            <LogIn className="w-4 h-4" />
+          </>
+        ) : (
+          <>
+            <span>Daftar Sekarang</span>
+            <UserPlus className="w-4 h-4" />
+          </>
+        )}
       </button>
 
       <div className="text-center pt-3">

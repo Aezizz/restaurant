@@ -1,4 +1,5 @@
 import React from "react";
+import { FileText, CookingPot, CheckCircle2, BellRing, Printer } from "lucide-react";
 
 export default function OrderCard({
   order,
@@ -85,8 +86,9 @@ export default function OrderCard({
             </div>
 
             {item.notes && (
-              <p className="text-xs text-[#5c1f2e] bg-[#e8ded2]/40 px-2 py-1 rounded-md mt-1 font-semibold">
-                📝 Catatan: {item.notes}
+              <p className="text-xs text-[#5c1f2e] bg-[#e8ded2]/40 px-2 py-1 rounded-md mt-1 font-semibold flex items-center gap-1">
+                <FileText className="w-3.5 h-3.5 shrink-0" />
+                <span>Catatan: {item.notes}</span>
               </p>
             )}
           </li>
@@ -122,9 +124,15 @@ export default function OrderCard({
               borderRadius: "4px",
               cursor: "pointer",
               width: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "6px",
+              fontWeight: "bold",
             }}
           >
-            Masak 🍳
+            <CookingPot style={{ width: "16px", height: "16px" }} />
+            <span>Masak</span>
           </button>
         )}
 
@@ -141,9 +149,15 @@ export default function OrderCard({
               borderRadius: "4px",
               cursor: "pointer",
               width: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "6px",
+              fontWeight: "bold",
             }}
           >
-            Selesai ✅
+            <CheckCircle2 style={{ width: "16px", height: "16px" }} />
+            <span>Selesai</span>
           </button>
         )}
 
@@ -161,9 +175,14 @@ export default function OrderCard({
                 color: "#2b8a3e",
                 fontWeight: "bold",
                 textAlign: "center",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "4px",
               }}
             >
-              Pesanan Selesai 🎉
+              <CheckCircle2 style={{ width: "16px", height: "16px" }} />
+              <span>Pesanan Selesai</span>
             </span>
 
             <button
@@ -177,9 +196,14 @@ export default function OrderCard({
                 cursor: "pointer",
                 fontSize: "12px",
                 fontWeight: "bold",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px",
               }}
             >
-              📢 Kirim Ulang Notifikasi
+              <BellRing style={{ width: "14px", height: "14px" }} />
+              <span>Kirim Ulang Notifikasi</span>
             </button>
             <button
               onClick={() => onPrintReceipt(order)}
@@ -194,9 +218,14 @@ export default function OrderCard({
                 fontWeight: "bold",
                 marginTop: "4px",
                 width: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px",
               }}
             >
-              🖨️ Cetak Struk Pesanan
+              <Printer style={{ width: "14px", height: "14px" }} />
+              <span>Cetak Struk Pesanan</span>
             </button>
           </div>
         )}

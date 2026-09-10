@@ -1,4 +1,5 @@
 import React from "react";
+import { Save } from "lucide-react";
 import { toast } from "react-toastify";
 
 export default function AccountSettingsTab({ profileData, setProfileData }) {
@@ -43,9 +44,10 @@ export default function AccountSettingsTab({ profileData, setProfileData }) {
             "Fitur pembaruan profil akan segera disinkronkan ke backend!",
           )
         }
-        className="w-full py-2.5 bg-stone-800 text-white rounded-xl font-bold text-xs hover:bg-stone-900 transition-colors cursor-pointer"
+        className="w-full py-2.5 bg-stone-800 text-white rounded-xl font-bold text-xs hover:bg-stone-900 transition-colors cursor-pointer flex items-center justify-center gap-1.5"
       >
-        Simpan Perubahan 💾
+        <Save className="w-3.5 h-3.5" />
+        <span>Simpan Perubahan</span>
       </button>
     </div>
   );

@@ -1,4 +1,5 @@
 import React from "react";
+import { X, Send } from "lucide-react";
 
 export default function CartDrawer({
   isOpen,
@@ -24,9 +25,9 @@ export default function CartDrawer({
             <button
               onClick={onClose}
               disabled={isSubmitting}
-              className="text-gray-500 hover:text-black font-bold text-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="text-stone-400 hover:text-[#5c1f2e] p-1 rounded-full hover:bg-stone-100 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              ✕
+              <X className="w-5 h-5" />
             </button>
           </div>
 
@@ -122,7 +123,10 @@ export default function CartDrawer({
                 <span>Mengirim Pesanan...</span>
               </>
             ) : (
-              "Kirim Pesanan ke Dapur 🚀"
+              <>
+                <span>Kirim Pesanan ke Dapur</span>
+                <Send className="w-4 h-4" />
+              </>
             )}
           </button>
         </div>

@@ -1,5 +1,5 @@
 import React from "react";
-import "material-symbols-rc/css";
+import { Home, ShoppingBag, Bell, User } from "lucide-react";
 
 export default function BottomNav({
   cartItemCount,
@@ -17,7 +17,7 @@ export default function BottomNav({
           activeMenu === "home" ? "text-[#5c1f2e]" : "text-stone-400"
         }`}
       >
-        <span className="material-symbols-outlined">home</span>
+        <Home className="w-5 h-5" />
         <span className="text-[10px] font-semibold mt-0.5">Home</span>
       </button>
 
@@ -27,9 +27,7 @@ export default function BottomNav({
           activeMenu === "cart" ? "text-[#5c1f2e]" : "text-stone-400"
         }`}
       >
-        <span className="material-symbols-outlined">
-          shopping_cart_checkout
-        </span>
+        <ShoppingBag className="w-5 h-5" />
         {cartItemCount > 0 && (
           <span className="absolute -top-1 -right-2 bg-[#5c1f2e] text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
             {cartItemCount}
@@ -44,7 +42,7 @@ export default function BottomNav({
           activeMenu === "notif" ? "text-[#5c1f2e]" : "text-stone-400"
         }`}
       >
-        <span className="material-symbols-outlined">notifications_active</span>
+        <Bell className="w-5 h-5" />
         <span className="text-[10px] font-semibold mt-0.5">Notif</span>
       </button>
 
@@ -54,7 +52,7 @@ export default function BottomNav({
           activeMenu === "account" ? "text-[#5c1f2e]" : "text-stone-400"
         }`}
       >
-        <span className="material-symbols-outlined">emoji_people</span>
+        <User className="w-5 h-5" />
         <span className="text-[10px] font-semibold mt-0.5">Akun</span>
       </button>
     </div>

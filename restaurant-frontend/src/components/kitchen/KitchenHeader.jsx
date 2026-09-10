@@ -1,4 +1,5 @@
 import React from "react";
+import { ChefHat, FileSpreadsheet, RotateCcw, Trash2 } from "lucide-react";
 
 export default function KitchenHeader({
   onResetQueue,
@@ -16,7 +17,10 @@ export default function KitchenHeader({
         flexWrap: "wrap",
       }}
     >
-      <h1>Dashboard Dapur / Kasir - Daftar Pesanan Masuk 👨‍🍳</h1>
+      <h1 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <span>Dashboard Dapur / Kasir - Daftar Pesanan Masuk</span>
+        <ChefHat style={{ width: "24px", height: "24px" }} />
+      </h1>
       <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
         <button
           onClick={onExportSheets}
@@ -28,9 +32,13 @@ export default function KitchenHeader({
             borderRadius: "6px",
             cursor: "pointer",
             fontWeight: "bold",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
           }}
         >
-          📊 Rekap Harian (Google Sheets)
+          <FileSpreadsheet style={{ width: "16px", height: "16px" }} />
+          <span>Rekap Harian (Google Sheets)</span>
         </button>
         <button
           onClick={onResetQueue}
@@ -42,9 +50,13 @@ export default function KitchenHeader({
             borderRadius: "6px",
             cursor: "pointer",
             fontWeight: "bold",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
           }}
         >
-          🔢 Reset Nomor Antrian (#001)
+          <RotateCcw style={{ width: "16px", height: "16px" }} />
+          <span>Reset Nomor Antrian (#001)</span>
         </button>
         <button
           onClick={onResetDailyOrders}
@@ -56,9 +68,13 @@ export default function KitchenHeader({
             borderRadius: "6px",
             cursor: "pointer",
             fontWeight: "bold",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
           }}
         >
-          🧹 Reset Pesanan Selesai (Tutup Toko)
+          <Trash2 style={{ width: "16px", height: "16px" }} />
+          <span>Reset Pesanan Selesai (Tutup Toko)</span>
         </button>
       </div>
     </div>
