@@ -58,7 +58,7 @@ export default function OrderCard({
             : "---"}
         </span>
       </div>
-      <h3>Meja Nomor: {order.table_number}</h3>
+      <h3 className="font-bold text-base mb-1">Nama Pemesan: {order.customer_name || "-"}</h3>
       <p>
         <strong>Status:</strong>{" "}
         <span style={{ textTransform: "uppercase", fontWeight: "bold" }}>
@@ -114,7 +114,7 @@ export default function OrderCard({
         {order.status === "pending" && (
           <button
             onClick={() =>
-              onUpdateStatus(order._id, "cooking", order.table_number)
+              onUpdateStatus(order._id, "cooking", order.customer_name)
             }
             style={{
               background: "#f08c00",
@@ -139,7 +139,7 @@ export default function OrderCard({
         {order.status === "cooking" && (
           <button
             onClick={() =>
-              onUpdateStatus(order._id, "completed", order.table_number)
+              onUpdateStatus(order._id, "completed", order.customer_name)
             }
             style={{
               background: "#2b8a3e",
@@ -186,7 +186,7 @@ export default function OrderCard({
             </span>
 
             <button
-              onClick={() => onReNotify(order._id, order.table_number)}
+              onClick={() => onReNotify(order._id, order.customer_name)}
               style={{
                 background: "#1971c2",
                 color: "white",

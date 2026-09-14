@@ -59,7 +59,7 @@ export const getAllOrders = async (req, res) => {
 // 🆕 Create new order (Dimodifikasi untuk menangkap user_id dari token)
 export const createOrder = async (req, res) => {
   try {
-    const { items, total, table_number } = req.body;
+    const { items, total, customer_name } = req.body;
     const queueNumber = await getNextQueueNumber();
 
     let userId = null;
@@ -85,7 +85,7 @@ export const createOrder = async (req, res) => {
     const newOrder = new Order({
       user_id: userId, // 👈 Menyimpan ID user jika login, null jika tidak
       queue_number: queueNumber,
-      table_number: table_number,
+      customer_name: customer_name,
       items: items.map((item) => ({
         menu_id: item.menu_id || item._id,
         name: item.name,
@@ -115,11 +115,11 @@ export const createOrder = async (req, res) => {
   }
 };
 
-// 📊 Get orders by table number
-export const getOrdersByTable = async (req, res) => {
+// 📊 Get orders by customer name
+export const getOrdersByCustomer = async (req, res) => {
   try {
-    const { tableNumber } = req.params;
-    const orders = await Order.find({ table_number: Number(tableNumber) }).sort(
+    const { customerName } = req.params;
+    const orders = await Order.find({ customer_name: customerName }).sort(
       { created_at: -1, _id: -1 },
     );
 
@@ -128,7 +128,7 @@ export const getOrdersByTable = async (req, res) => {
       data: orders,
     });
   } catch (error) {
-    console.error("Error fetching table orders:", error);
+    console.error("Error fetching customer orders:", error);
     res
       .status(500)
       .json({ success: false, message: "Gagal memuat riwayat pesanan" });

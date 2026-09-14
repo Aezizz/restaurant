@@ -5,13 +5,13 @@ import { socket, API_BASE_URL } from "../services/socket";
 export default function NotificationModal({ isOpen, onClose }) {
   const [orders, setOrders] = useState([]);
   const [alertBanner, setAlertBanner] = useState(null);
-  const tableNumber = localStorage.getItem("tableNumber");
+  const customerName = localStorage.getItem("customerName");
 
   useEffect(() => {
     if (!isOpen) return;
 
-    if (tableNumber) {
-      fetch(`${API_BASE_URL}/api/orders/table/${tableNumber}`)
+    if (customerName) {
+      fetch(`${API_BASE_URL}/api/orders/customer/${encodeURIComponent(customerName)}`)
         .then((res) => res.json())
         .then((result) => {
           if (result.success && Array.isArray(result.data)) {
@@ -24,7 +24,11 @@ export default function NotificationModal({ isOpen, onClose }) {
     }
 
     socket.on("order-status-update", (updatedOrder) => {
-      if (Number(updatedOrder.table_number) === Number(tableNumber)) {
+      if (
+        updatedOrder.customer_name &&
+        customerName &&
+        updatedOrder.customer_name.trim().toLowerCase() === customerName.trim().toLowerCase()
+      ) {
         setOrders((prevOrders) =>
           prevOrders.map((ord) => {
             if (ord._id === updatedOrder._id) {
@@ -50,7 +54,7 @@ export default function NotificationModal({ isOpen, onClose }) {
     return () => {
       socket.off("order-status-update");
     };
-  }, [isOpen, tableNumber]);
+  }, [isOpen, customerName]);
 
   if (!isOpen) return null;
 
@@ -64,7 +68,7 @@ export default function NotificationModal({ isOpen, onClose }) {
               Pesanan Siap!
             </h4>
             <p className="text-xs text-stone-600 mt-0.5 leading-relaxed">
-              Pesanan untuk Meja #{tableNumber} (No. Antrean #
+              Pesanan untuk {customerName} (No. Antrean #
               {alertBanner.queue}) sudah siap diambil di kasir!
             </p>
           </div>
@@ -96,7 +100,7 @@ export default function NotificationModal({ isOpen, onClose }) {
             <div className="text-center mt-20 text-stone-400 flex flex-col items-center">
               <Bell className="w-12 h-12 mb-3 text-stone-300 stroke-[1.5]" />
               <p className="text-sm">
-                Belum ada riwayat pesanan aktif untuk Meja #{tableNumber}.
+                Belum ada riwayat pesanan aktif untuk {customerName || "Anda"}.
               </p>
             </div>
           ) : (
@@ -124,7 +128,7 @@ export default function NotificationModal({ isOpen, onClose }) {
                     </span>
                   </div>
                   <p className="text-xs text-stone-500">
-                    Meja Nomor: #{tableNumber}
+                    Nama Pemesan: {orderStatus.customer_name || customerName}
                   </p>
 
                   <div className="space-y-1.5 pt-2 border-t border-stone-200">

@@ -76,7 +76,7 @@ export function useKitchenOrders() {
     };
   }, [fetchOrders, fetchDailyStats]);
 
-  const updateStatus = async (orderId, newStatus, tableNumber) => {
+  const updateStatus = async (orderId, newStatus, customerName) => {
     try {
       const result = await updateOrderStatusApi(orderId, newStatus);
       if (result.success) {
@@ -85,7 +85,7 @@ export function useKitchenOrders() {
         );
 
         socket.emit("update-order-status", {
-          table_number: tableNumber,
+          customer_name: customerName,
           status: newStatus,
           ...result.data,
         });
@@ -93,7 +93,7 @@ export function useKitchenOrders() {
         if (newStatus === "completed") {
           socket.emit("finish-order", {
             orderId: orderId,
-            table_number: tableNumber,
+            customer_name: customerName,
           });
         }
 
@@ -171,13 +171,13 @@ export function useKitchenOrders() {
     }
   };
 
-  const reNotifyCustomer = (orderId, tableNumber) => {
+  const reNotifyCustomer = (orderId, customerName) => {
     socket.emit("finish-order", {
       orderId: orderId,
-      table_number: tableNumber,
+      customer_name: customerName,
     });
     toast.success(
-      `Notifikasi berhasil dikirim ulang ke Meja #${tableNumber}!`,
+      `Notifikasi berhasil dikirim ulang ke ${customerName}!`,
     );
   };
 

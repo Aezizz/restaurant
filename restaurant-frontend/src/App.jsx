@@ -6,6 +6,7 @@ import KitchenDashboard from "./pages/KitchenDashboard";
 import AOS from "aos";
 import "aos/dist/aos.css"; // Wajib import CSS-nya
 import ResetPasswordPage from "./pages/ResetPasswordPage"; // Sesuaikan path foldernya ya kalau beda folder
+import CashierOrderPage from "./pages/CashierOrderPage";
 
 function App() {
   useEffect(() => {
@@ -28,6 +29,7 @@ function App() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         {/* Halaman Dapur / Kasir */}
         <Route path="/kitchen" element={<KitchenDashboard />} />
+        <Route path="/cashier" element={<CashierOrderPage />} />
       </Routes>
     </Router>
   );

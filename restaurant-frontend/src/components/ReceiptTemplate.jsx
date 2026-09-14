@@ -27,8 +27,8 @@ export default function ReceiptTemplate({ order }) {
           </span>
         </div>
         <div className="flex justify-between">
-          <span>No. Meja:</span>
-          <span className="font-bold">#{order.table_number}</span>
+          <span>Nama Pemesan:</span>
+          <span className="font-bold">{order.customer_name || "-"}</span>
         </div>
         <div className="flex justify-between">
           <span>Waktu:</span>

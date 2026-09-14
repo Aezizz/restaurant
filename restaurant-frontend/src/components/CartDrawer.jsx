@@ -5,6 +5,8 @@ export default function CartDrawer({
   isOpen,
   onClose,
   cart,
+  customerName = "",
+  onCustomerNameChange,
   onUpdateQuantity,
   onUpdateNotes,
   onCheckout,
@@ -15,6 +17,8 @@ export default function CartDrawer({
   const calculateTotal = () => {
     return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   };
+
+  const isFormInvalid = isSubmitting || cart.length === 0 || !customerName?.trim();
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex justify-end">
@@ -31,7 +35,22 @@ export default function CartDrawer({
             </button>
           </div>
 
-          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+          {/* Input Nama Pemesan di Cart Drawer */}
+          <div className="mb-4 bg-[#fcf9f5] p-3 rounded-2xl border border-[#e8ded2]">
+            <label className="block text-xs font-bold text-[#5c1f2e] mb-1.5 uppercase tracking-wider">
+              Nama Pemesan <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={customerName}
+              disabled={isSubmitting}
+              onChange={onCustomerNameChange}
+              placeholder="Masukkan Nama"
+              className="w-full text-xs p-2 bg-white border border-[#e8ded2] rounded-xl focus:outline-none focus:ring-1 focus:ring-[#5c1f2e] disabled:opacity-50 font-medium"
+            />
+          </div>
+
+          <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-1">
             {cart.length === 0 ? (
               <p className="text-center text-stone-400 text-xs py-8">
                 Keranjang masih kosong.
@@ -91,9 +110,9 @@ export default function CartDrawer({
           </div>
           <button
             onClick={onCheckout}
-            disabled={isSubmitting || cart.length === 0}
+            disabled={isFormInvalid}
             className={`w-full py-3 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md text-xs ${
-              isSubmitting || cart.length === 0
+              isFormInvalid
                 ? "bg-stone-300 text-stone-500 cursor-not-allowed opacity-75"
                 : "bg-[#5c1f2e] text-white hover:bg-[#431420] active:scale-[0.99]"
             }`}

@@ -3,7 +3,7 @@ import express from "express";
 import {
   getAllOrders,
   createOrder,
-  getOrdersByTable,
+  getOrdersByCustomer,
   updateOrderStatus,
   deleteCompletedOrders,
   resetQueue,
@@ -18,7 +18,7 @@ const router = express.Router();
 
 // 📋 GET routes
 router.get("/", getAllOrders);
-router.get("/table/:tableNumber", getOrdersByTable);
+router.get("/customer/:customerName", getOrdersByCustomer);
 router.get("/my-history", verifyTokenMiddleware, getMyOrderHistory);
 router.get("/stats/rating", getAverageRating);
 // 📤 POST routes

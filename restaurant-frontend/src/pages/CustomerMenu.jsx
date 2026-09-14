@@ -29,8 +29,8 @@ export default function CustomerMenu() {
 
   const [menus, setMenus] = useState([]);
   const [activeCategory, setActiveCategory] = useState(null);
-  const [tableNumber, setTableNumber] = useState(
-    localStorage.getItem("tableNumber") || "",
+  const [customerName, setCustomerName] = useState(
+    localStorage.getItem("customerName") || "",
   );
   const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false);
   const [hasNewVoucher, setHasNewVoucher] = useState(true); // True kalau ada voucher baru
@@ -108,9 +108,13 @@ export default function CustomerMenu() {
   // --- Socket listener: notifikasi pesanan siap ---
   useEffect(() => {
     socket.on("order-ready", (data) => {
-      if (Number(data.table_number) === Number(tableNumber)) {
+      if (
+        data.customer_name &&
+        customerName &&
+        data.customer_name.trim().toLowerCase() === customerName.trim().toLowerCase()
+      ) {
         toast.success(
-          `Pesanan Siap! Pesanan untuk Meja #${data.table_number} sudah siap diambil di kasir!`,
+          `Pesanan Siap! Pesanan untuk ${data.customer_name} sudah siap diambil di kasir!`,
           {
             position: "top-center",
             autoClose: 5000,
@@ -131,7 +135,7 @@ export default function CustomerMenu() {
     return () => {
       socket.off("order-ready");
     };
-  }, [tableNumber]);
+  }, [customerName]);
 
   // --- Drag horizontal (kategori chip) ---
   const handleMouseDown = (e) => {
@@ -193,10 +197,10 @@ export default function CustomerMenu() {
     : randomMenus;
 
   // --- Handlers ---
-  const handleTableChange = (e) => {
+  const handleCustomerNameChange = (e) => {
     const val = e.target.value;
-    setTableNumber(val);
-    localStorage.setItem("tableNumber", val);
+    setCustomerName(val);
+    localStorage.setItem("customerName", val);
   };
 
   const handleCloseAllModals = () => {
@@ -245,8 +249,8 @@ export default function CustomerMenu() {
       toast.error("Keranjang masih kosong!");
       return;
     }
-    if (!tableNumber) {
-      toast.error("Tolong masukkan nomor meja terlebih dahulu!");
+    if (!customerName.trim()) {
+      toast.error("Tolong masukkan nama pemesan terlebih dahulu!");
       return;
     }
 
@@ -270,7 +274,7 @@ export default function CustomerMenu() {
             notes: item.notes || "",
           })),
           total: calculateTotal(),
-          table_number: Number(tableNumber),
+          customer_name: customerName.trim(),
         }),
       });
 
@@ -327,8 +331,8 @@ export default function CustomerMenu() {
         <GreetingCard
           menus={menus}
           onSelectMenu={handleOpenDetail}
-          tableNumber={tableNumber}
-          onTableChange={handleTableChange}
+          customerName={customerName}
+          onCustomerNameChange={handleCustomerNameChange}
         />
       </div>
 
@@ -485,6 +489,8 @@ export default function CustomerMenu() {
           isOpen={isCartOpen}
           onClose={handleCloseAllModals}
           cart={cart}
+          customerName={customerName}
+          onCustomerNameChange={handleCustomerNameChange}
           onUpdateQuantity={updateQuantity}
           onUpdateNotes={updateNotes}
           onCheckout={handleCheckout}

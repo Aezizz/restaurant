@@ -9,7 +9,7 @@ const orderSchema = new mongoose.Schema({
     default: null,
   },
   queue_number: { type: Number, required: true },
-  table_number: { type: Number, required: true },
+  customer_name: { type: String, required: true },
   items: [
     {
       menu_id: {

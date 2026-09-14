@@ -10,12 +10,12 @@ const socket = io(API_URL);
 
 export default function NotificationPage({ onClose }) {
   const [orderStatus, setOrderStatus] = useState(null);
-  const tableNumber = localStorage.getItem("tableNumber");
+  const customerName = localStorage.getItem("customerName");
 
   useEffect(() => {
     // Fetch status terakhir dari API saat halaman dibuka
-    if (tableNumber) {
-      fetch(`${API_URL}/api/orders/table/${tableNumber}`)
+    if (customerName) {
+      fetch(`${API_URL}/api/orders/customer/${encodeURIComponent(customerName)}`)
         .then((res) => res.json())
         .then((result) => {
           if (result.success) setOrderStatus(result.data);
@@ -25,13 +25,17 @@ export default function NotificationPage({ onClose }) {
 
     // Listener Real-time
     socket.on("order-status-update", (data) => {
-      if (Number(data.table_number) === Number(tableNumber)) {
+      if (
+        data.customer_name &&
+        customerName &&
+        data.customer_name.trim().toLowerCase() === customerName.trim().toLowerCase()
+      ) {
         setOrderStatus(data);
       }
     });
 
     return () => socket.off("order-status-update");
-  }, [tableNumber]);
+  }, [customerName]);
 
   return (
     <div className="fixed inset-0 z-50 bg-[#fcf9f5] p-6">
@@ -66,7 +70,7 @@ export default function NotificationPage({ onClose }) {
           </div>
 
           <div className="flex justify-between items-center mb-4">
-            <h3 className="font-bold">Meja #{tableNumber}</h3>
+            <h3 className="font-bold">Nama Pemesan: {customerName}</h3>
             <span
               className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${
                 orderStatus.status === "completed"

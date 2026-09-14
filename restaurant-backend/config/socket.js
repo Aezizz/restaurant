@@ -16,14 +16,14 @@ export const configureSocket = (server) => {
     // Event saat status pesanan diubah
     socket.on("update-order-status", (data) => {
       console.log(
-        `Status Meja #${data.table_number} berubah jadi: ${data.status}`,
+        `Status Pesanan (${data.customer_name}) berubah jadi: ${data.status}`,
       );
       io.emit("order-status-update", data);
     });
 
     // Event notifikasi "Siap Diambil"
     socket.on("finish-order", (data) => {
-      console.log(`Notifikasi selesai dikirim ke Meja #${data.table_number}`);
+      console.log(`Notifikasi selesai dikirim ke Pemesan: ${data.customer_name}`);
       io.emit("order-ready", data);
     });
 

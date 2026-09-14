@@ -3,8 +3,8 @@ import React, { useState, useEffect } from "react";
 export default function GreetingCard({
   menus = [],
   onSelectMenu,
-  tableNumber,
-  onTableChange,
+  customerName,
+  onCustomerNameChange,
 }) {
   const [userName, setUserName] = useState("Kopi Lovers <3");
   const greetings = [
@@ -63,8 +63,8 @@ export default function GreetingCard({
       {/* Elemen Dekorasi Animasi Bintang / Snowball di Pojok Kanan */}
       <div className="absolute top-4 right-5 pointer-events-none flex items-center space-x-1.5 opacity-80"></div>
 
-      {/* Sapaan & Area Kosong Kanan */}
-      <div className="flex justify-between items-start gap-3 relative z-10">
+      {/* Sapaan & Input Nama Pemesan */}
+      <div className="flex justify-between items-start gap-3 relative z-10 flex-wrap sm:flex-nowrap">
         <div>
           <div className="w-70 h-9 rounded-xl flex items-center">
             <h2 className="text-sm sm:text-base font-bold font-serif tracking-wide text-[#5c1f2e]">
@@ -76,23 +76,19 @@ export default function GreetingCard({
           </p>
         </div>
 
-        {/* Kotak Nomor Meja (Sedang di-unactive-kan sesuai request) */}
-        {/* 
+        {/* Kotak Nama Pemesan */}
         <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-2xl border border-[#e8ded2] shadow-sm flex-shrink-0">
           <span className="text-[10px] sm:text-xs font-bold text-stone-500 uppercase">
-            NOMOR MEJA:
+            NAMA PEMESAN:
           </span>
           <input
-            type="number"
-            min="1"
-            max="100"
-            value={tableNumber}
-            onChange={onTableChange}
-            placeholder="11"
-            className="w-10 sm:w-12 py-0.5 bg-[#fcf9f5] border border-[#e8ded2] rounded-xl text-center text-xs sm:text-sm font-bold text-[#5c1f2e] focus:outline-none focus:ring-1 focus:ring-[#5c1f2e]"
+            type="text"
+            value={customerName}
+            onChange={onCustomerNameChange}
+            placeholder="Masukkan Nama"
+            className="w-28 sm:w-36 py-0.5 px-2 bg-[#fcf9f5] border border-[#e8ded2] rounded-xl text-xs sm:text-sm font-bold text-[#5c1f2e] focus:outline-none focus:ring-1 focus:ring-[#5c1f2e]"
           />
-        </div> 
-        */}
+        </div>
       </div>
 
       {/* Menu Rekomendasi (Kotak Gambar di Kiri) */}

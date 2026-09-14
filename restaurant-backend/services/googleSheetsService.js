@@ -47,7 +47,7 @@ export const exportOrdersToSheets = async (orders) => {
       "No. Antrian": o.queue_number
         ? `#${o.queue_number.toString().padStart(3, "0")}`
         : "-",
-      "No. Meja": o.table_number || "-",
+      "Nama Pemesan": o.customer_name || "-",
       Total: o.total_price || 0,
     }));
 
