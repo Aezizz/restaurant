@@ -48,14 +48,20 @@ export default function LandingPage() {
             )}
           </h1>
 
-          {/* Tombol Our Menu */}
-          <div className="mt-2 flex justify-center md:justify-start">
+          {/* Tombol Our Menu & Login */}
+          <div className="mt-2 flex flex-wrap items-center justify-center md:justify-start gap-3.5">
             <Link
               to="/menu"
-              className="inline-block rounded-full px-12 md:px-20 py-3 bg-white text-[#5c1f2e] font-semibold shadow-xl hover:bg-[#5c1f2e] hover:text-white transition-all duration-150 relative overflow-visible cursor-pointer text-sm md:text-base"
+              className="inline-block rounded-full px-8 md:px-12 py-3 bg-white text-[#5c1f2e] font-semibold shadow-xl hover:bg-[#5c1f2e] hover:text-white transition-all duration-150 relative overflow-visible cursor-pointer text-sm md:text-base"
             >
               OUR MENU
               <span className="absolute inset-0 rounded-full animate-ping bg-white/60 -z-10 pointer-events-none" />
+            </Link>
+            <Link
+              to="/login"
+              className="inline-block rounded-full px-6 md:px-8 py-3 bg-black/30 md:bg-white/60 backdrop-blur-sm text-white md:text-[#5c1f2e] border border-white/20 md:border-[#5c1f2e]/20 font-semibold shadow-md hover:bg-[#5c1f2e] hover:text-white transition-all duration-150 cursor-pointer text-sm md:text-base"
+            >
+              LOGIN
             </Link>
           </div>
         </div>

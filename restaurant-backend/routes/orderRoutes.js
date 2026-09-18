@@ -1,4 +1,3 @@
-// routes/orderRoutes.js
 import express from "express";
 import {
   getAllOrders,
@@ -9,28 +8,78 @@ import {
   resetQueue,
   exportToSheets,
   getMyOrderHistory,
-  rateOrder, // 👈 Import controller baru
-  getAverageRating, // 👈 Import controller baru
+  rateOrder,
+  getAverageRating,
+  getDailyStats,
+  getWeeklyStats,
 } from "../controllers/orderController.js";
 
-import { verifyTokenMiddleware } from "../middleware/authMiddleware.js";
+import {
+  verifyTokenMiddleware,
+  requireRoles,
+} from "../middleware/authMiddleware.js";
+
 const router = express.Router();
 
-// 📋 GET routes
-router.get("/", getAllOrders);
+// 📋 GET routes (Dapur & Kasir & Admin)
+router.get(
+  "/",
+  verifyTokenMiddleware,
+  requireRoles("cashier", "kitchen", "admin"),
+  getAllOrders
+);
 router.get("/customer/:customerName", getOrdersByCustomer);
 router.get("/my-history", verifyTokenMiddleware, getMyOrderHistory);
 router.get("/stats/rating", getAverageRating);
-// 📤 POST routes
-router.post("/", createOrder);
-router.post("/reset-queue", resetQueue);
-router.post("/export", exportToSheets);
-router.post("/:orderId/rate", verifyTokenMiddleware, rateOrder);
-// 🔄 PATCH routes
-router.patch("/:id/status", updateOrderStatus);
-router.put("/:orderId/status", updateOrderStatus);
+router.get(
+  "/daily-stats",
+  verifyTokenMiddleware,
+  requireRoles("admin", "kitchen"),
+  getDailyStats
+);
+router.get(
+  "/weekly-stats",
+  verifyTokenMiddleware,
+  requireRoles("admin"),
+  getWeeklyStats
+);
 
-// 🗑️ DELETE routes
-router.delete("/completed", deleteCompletedOrders);
+// 📤 POST routes
+router.post("/", createOrder); // Publik (Customer / Tamu buat pesanan)
+router.post(
+  "/reset-queue",
+  verifyTokenMiddleware,
+  requireRoles("admin"),
+  resetQueue
+);
+router.post(
+  "/export",
+  verifyTokenMiddleware,
+  requireRoles("admin"),
+  exportToSheets
+);
+router.post("/:orderId/rate", verifyTokenMiddleware, rateOrder);
+
+// 🔄 PATCH / PUT routes (Dapur & Kasir & Admin)
+router.patch(
+  "/:id/status",
+  verifyTokenMiddleware,
+  requireRoles("cashier", "kitchen", "admin"),
+  updateOrderStatus
+);
+router.put(
+  "/:orderId/status",
+  verifyTokenMiddleware,
+  requireRoles("cashier", "kitchen", "admin"),
+  updateOrderStatus
+);
+
+// 🗑️ DELETE routes (Khusus Admin)
+router.delete(
+  "/completed",
+  verifyTokenMiddleware,
+  requireRoles("admin"),
+  deleteCompletedOrders
+);
 
 export default router;

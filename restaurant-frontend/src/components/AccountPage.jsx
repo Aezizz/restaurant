@@ -70,12 +70,25 @@ export default function AccountPage({ isOpen, onClose, onReorder }) {
           const tokenValue =
             result.token || result.accessToken || result.data?.token;
           const nameValue = result.user?.name || result.name || "Customer";
+          const roleValue = result.user?.role || result.role || "customer";
 
           localStorage.setItem("userToken", tokenValue);
           localStorage.setItem("userName", nameValue);
+          localStorage.setItem("userRole", roleValue);
+          localStorage.setItem("customerName", nameValue);
           setToken(tokenValue);
           setUserName(nameValue);
-          toast.success("Berhasil masuk!");
+          toast.success(`Berhasil masuk sebagai ${nameValue}!`);
+
+          // 🚀 POST-LOGIN REDIRECT BERDASARKAN ROLE
+          if (roleValue === "admin") {
+            window.location.href = "/admin";
+          } else if (roleValue === "cashier") {
+            window.location.href = "/cashier";
+          } else {
+            // Customer: tetap di halaman menu dan tutup modal
+            if (onClose) onClose();
+          }
         } else {
           toast.success("Registrasi berhasil, silakan masuk!");
           setIsLoginMode(true);
@@ -94,6 +107,7 @@ export default function AccountPage({ isOpen, onClose, onReorder }) {
   const handleLogout = () => {
     localStorage.removeItem("userToken");
     localStorage.removeItem("userName");
+    localStorage.removeItem("userRole");
     setToken("");
     setUserName("");
     toast.info("Berhasil keluar akun.");

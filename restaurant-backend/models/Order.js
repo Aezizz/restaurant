@@ -26,7 +26,7 @@ const orderSchema = new mongoose.Schema({
   total_price: { type: Number, required: true },
   status: {
     type: String,
-    enum: ["pending", "cooking", "completed"],
+    enum: ["pending", "cooking", "completed", "cancelled"],
     default: "pending",
   },
   review: {
@@ -37,16 +37,8 @@ const orderSchema = new mongoose.Schema({
   created_at: { type: Date, default: Date.now },
 });
 
-// ⏰ TTL Index: Otomatis hapus dokumen setelah 3 hari (3 hari * 24 jam * 60 menit * 60 detik = 259200 detik)
-// Catatan: TTL index biasanya hanya aktif jika status pesanan sudah 'completed' atau 'cancelled' agar pesanan yang masih aktif tidak ikut terhapus.
-// Tapi karena secara default MongoDB menghapus semua dokumen berdasarkan field waktu, kita bisa atur partialFilterExpression khusus status 'completed'.
-orderSchema.index(
-  { created_at: 1 },
-  {
-    expireAfterSeconds: 259200,
-    partialFilterExpression: { status: "completed" },
-  },
-);
+// Catatan: TTL Index penghapusan otomatis (expireAfterSeconds) telah dihapus
+// demi menjaga Immutability & Integritas Laporan Keuangan POS (Audit Trail).
 
 const Order = mongoose.model("Order", orderSchema);
 export default mongoose.models.Order || Order;

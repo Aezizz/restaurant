@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
@@ -9,15 +10,30 @@ import {
   Send,
   ArrowLeft,
   Search,
+  UtensilsCrossed,
+  LogOut,
+  ShieldCheck,
+  LayoutDashboard,
 } from "lucide-react";
 import { socket, API_BASE_URL } from "../services/socket";
+import { getUserName, getUserRole, clearAuthSession } from "../utils/auth";
 
 export default function CashierOrderPage() {
+  const navigate = useNavigate();
   const [menus, setMenus] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [cart, setCart] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const currentUserName = getUserName();
+  const currentUserRole = getUserRole();
+
+  const handleLogout = () => {
+    clearAuthSession();
+    toast.info("Berhasil logout dari sistem kasir.");
+    navigate("/login", { replace: true });
+  };
 
   // Fetch daftar menu dari backend
   useEffect(() => {
@@ -27,10 +43,16 @@ export default function CashierOrderPage() {
       .catch((err) => console.error("Error fetching menus:", err));
   }, []);
 
-  // Filter menu berdasarkan input search bar
-  const filteredMenus = menus.filter((menu) =>
-    menu.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  // Filter menu berdasarkan input search bar (nama, kategori, deskripsi)
+  const filteredMenus = menus.filter((menu) => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      menu.name?.toLowerCase().includes(q) ||
+      menu.category?.toLowerCase().includes(q) ||
+      menu.description?.toLowerCase().includes(q)
+    );
+  });
 
   // Tambah menu ke keranjang kasir
   const handleAddToCart = (menu) => {
@@ -118,22 +140,61 @@ export default function CashierOrderPage() {
 
       {/* SISI KIRI: KATALOG MENU & SEARCH BAR */}
       <div className="flex-1 flex flex-col gap-5">
-        <div className="flex items-center justify-between border-b border-[#e8ded2] pb-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-[#e8ded2] pb-4 gap-3">
           <div>
-            <h1 className="text-xl font-serif font-bold">
-              Vyna POS - Kasir On-the-Spot
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-serif font-bold">
+                Vyna POS - Kasir On-the-Spot
+              </h1>
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                <ShieldCheck className="w-3 h-3" />
+                {currentUserRole}: {currentUserName}
+              </span>
+            </div>
             <p className="text-xs text-stone-500">
               Pencatatan pesanan langsung untuk tamu walk-in
             </p>
           </div>
-          <a
-            href="/kitchen"
-            className="flex items-center gap-2 text-xs font-semibold bg-white border border-[#e8ded2] px-4 py-2 rounded-xl hover:bg-[#e8ded2]/40 transition-colors shadow-xs"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Ke Layar Dapur</span>
-          </a>
+
+          <div className="flex items-center flex-wrap gap-2">
+            {/* Navigasi ke Halaman Menu Pelanggan (Diizinkan untuk Kasir) */}
+            <Link
+              to="/menu"
+              className="flex items-center gap-1.5 text-xs font-semibold bg-white border border-[#e8ded2] px-3 py-2 rounded-xl hover:bg-[#e8ded2]/40 transition-colors shadow-xs text-stone-700 hover:text-[#5c1f2e]"
+            >
+              <UtensilsCrossed className="w-3.5 h-3.5 text-[#5c1f2e]" />
+              <span>Lihat Menu</span>
+            </Link>
+
+            {/* Navigasi ke Layar Dapur */}
+            <Link
+              to="/kitchen"
+              className="flex items-center gap-1.5 text-xs font-semibold bg-white border border-[#e8ded2] px-3 py-2 rounded-xl hover:bg-[#e8ded2]/40 transition-colors shadow-xs text-stone-700"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Layar Dapur</span>
+            </Link>
+
+            {/* Link ke Admin Panel jika user adalah Admin */}
+            {currentUserRole === "admin" && (
+              <Link
+                to="/admin"
+                className="flex items-center gap-1.5 text-xs font-semibold bg-[#5c1f2e]/10 text-[#5c1f2e] border border-[#5c1f2e]/30 px-3 py-2 rounded-xl hover:bg-[#5c1f2e] hover:text-white transition-colors shadow-xs"
+              >
+                <LayoutDashboard className="w-3.5 h-3.5" />
+                <span>Admin Panel</span>
+              </Link>
+            )}
+
+            {/* Tombol Logout Kasir */}
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 text-xs font-semibold bg-red-50 text-red-600 border border-red-200 px-3 py-2 rounded-xl hover:bg-red-100 transition-colors shadow-xs cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Keluar</span>
+            </button>
+          </div>
         </div>
 
         {/* SEARCH BAR INPUT */}

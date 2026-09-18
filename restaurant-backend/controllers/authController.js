@@ -13,10 +13,17 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// 📝 Register Controller (Pastikan ada kata 'export')
+// 📝 Register Controller
 export const registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Nama, email, dan password wajib diisi!",
+      });
+    }
 
     // Cek apakah email sudah terdaftar
     const existingUser = await User.findOne({ email });
@@ -30,11 +37,15 @@ export const registerUser = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Tetapkan role default 'customer', cegah penetapan 'admin' via pendaftaran publik biasa
+    const userRole = role === "admin" ? "customer" : (role || "customer");
+
     // Simpan user baru
     const newUser = new User({
-      name,
-      email,
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
       password: hashedPassword,
+      role: userRole,
     });
 
     await newUser.save();
@@ -56,8 +67,15 @@ export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email dan password wajib diisi!",
+      });
+    }
+
     // Cari user berdasarkan email
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
     if (!user) {
       return res
         .status(404)
@@ -72,10 +90,19 @@ export const loginUser = async (req, res) => {
         .json({ success: false, message: "Password salah!" });
     }
 
-    // Buat token JWT
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      console.error("FATAL ERROR: JWT_SECRET environment variable is missing!");
+      return res.status(500).json({
+        success: false,
+        message: "Konfigurasi server tidak aman (JWT secret missing).",
+      });
+    }
+
+    // Buat token JWT yang menyertakan role
     const token = jwt.sign(
-      { id: user._id, email: user.email },
-      process.env.JWT_SECRET || "rahasia_jwt_lu",
+      { id: user._id, email: user.email, role: user.role || "customer" },
+      jwtSecret,
       { expiresIn: "7d" },
     );
 
@@ -87,6 +114,7 @@ export const loginUser = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role || "customer",
       },
     });
   } catch (error) {
@@ -101,38 +129,24 @@ export const loginUser = async (req, res) => {
 export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
-    console.log("➡️ [FORGOT PASSWORD] Menerima request untuk email:", email);
 
-    // 1. Cek Email & Konfigurasi Transporter
-    console.log("🔍 [FORGOT PASSWORD] Memeriksa konfigurasi EMAIL_USER:", process.env.EMAIL_USER || "BELUM DISET");
-
-    // 2. Cari user berdasarkan email
-    console.log("🔍 [FORGOT PASSWORD] Mencari user di database MongoDB...");
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email?.trim().toLowerCase() });
     if (!user) {
-      console.log("⚠️ [FORGOT PASSWORD] Email tidak ditemukan di database:", email);
       return res
         .status(404)
         .json({ success: false, message: "Email tidak terdaftar!" });
     }
-    console.log("✅ [FORGOT PASSWORD] User ditemukan ID:", user._id);
 
-    // 3. Buat reset token acak dan tentukan masa aktif 15 menit
+    // Buat reset token acak dan tentukan masa aktif 15 menit
     const resetToken = crypto.randomBytes(32).toString("hex");
     const resetTokenExpire = new Date(Date.now() + 15 * 60 * 1000); // 15 menit
-    console.log("🔑 [FORGOT PASSWORD] Token berhasil dibuat.");
 
-    // 4. Simpan token dan masa berlaku ke database
-    console.log("💾 [FORGOT PASSWORD] Menyimpan resetToken ke database...");
     await User.findByIdAndUpdate(user._id, {
       resetToken,
       resetTokenExpire,
     });
-    console.log("✅ [FORGOT PASSWORD] Token berhasil disimpan di database.");
 
-    // 5. Buat link verifikasi & Kirim Email
     const resetLink = `http://localhost:5173/reset-password?token=${resetToken}`;
-    console.log("✉️ [FORGOT PASSWORD] Mengirim email melalui Nodemailer...");
 
     await transporter.sendMail({
       from: `"Vyna Coffee" <${process.env.EMAIL_USER}>`,
@@ -153,7 +167,6 @@ export const forgotPassword = async (req, res) => {
         </div>
       `,
     });
-    console.log("🎉 [FORGOT PASSWORD] Email berhasil dikirim ke:", user.email);
 
     res.status(200).json({
       success: true,
@@ -172,7 +185,6 @@ export const resetPassword = async (req, res) => {
   try {
     const { token, newPassword } = req.body;
 
-    // Cari user dengan token yang cocok dan masih berlaku
     const user = await User.findOne({
       resetToken: token,
       resetTokenExpire: { $gt: Date.now() },
@@ -185,10 +197,8 @@ export const resetPassword = async (req, res) => {
       });
     }
 
-    // Hash password baru
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    // Update password dan hapus token reset
     await User.findByIdAndUpdate(user._id, {
       password: hashedPassword,
       $unset: { resetToken: "", resetTokenExpire: "" },
