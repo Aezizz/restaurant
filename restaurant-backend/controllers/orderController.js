@@ -112,6 +112,22 @@ export const createOrder = async (req, res) => {
         });
       }
 
+      // 📦 Cek stok: -1 = unlimited; 0 = habis; > 0 = ada stok
+      if (dbMenu.stock !== undefined && dbMenu.stock !== -1) {
+        if (dbMenu.stock <= 0) {
+          return res.status(400).json({
+            success: false,
+            message: `Menu '${dbMenu.name}' sedang habis stok. Silakan pilih menu lain.`,
+          });
+        }
+        if (dbMenu.stock < qty) {
+          return res.status(400).json({
+            success: false,
+            message: `Stok '${dbMenu.name}' tidak mencukupi. Tersisa ${dbMenu.stock} porsi, Anda memesan ${qty}.`,
+          });
+        }
+      }
+
       // Hitung subtotal menggunakan HARGA RESMI dari database
       const itemSubtotal = dbMenu.price * qty;
       calculatedTotal += itemSubtotal;
@@ -157,6 +173,19 @@ export const createOrder = async (req, res) => {
 
     await newOrder.save();
 
+    // 📦 Kurangi stok secara atomis setelah order tersimpan
+    const updatedMenusForSocket = [];
+    for (const item of validatedItems) {
+      const updated = await Menu.findOneAndUpdate(
+        { _id: item.menu_id, stock: { $gt: 0 } }, // Hanya kurangi jika stok aktif (> 0), lewati jika -1
+        { $inc: { stock: -item.quantity } },
+        { new: true }
+      );
+      if (updated) {
+        updatedMenusForSocket.push(updated);
+      }
+    }
+
     // 📜 Log Audit Trail untuk pembuatan order baru
     await AuditLog.create({
       user_id: userId,
@@ -176,6 +205,10 @@ export const createOrder = async (req, res) => {
     if (req.io) {
       req.io.emit("new-order", newOrder);
       req.io.emit("order-status-update", newOrder);
+      // ⚡ Emit event pembaruan stok real-time ke kasir, customer, & admin
+      if (updatedMenusForSocket.length > 0) {
+        req.io.emit("stock-updated", updatedMenusForSocket);
+      }
     }
 
     res.status(201).json({

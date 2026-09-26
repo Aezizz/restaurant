@@ -24,12 +24,15 @@ export default function GreetingCard({
 
   useEffect(() => {
     if (menus.length > 0) {
-      const coffeeAndDrinks = menus.filter(
-        (m) => m.category === "Coffee" || m.category === "Non-Coffee",
+      const inStockDrinks = menus.filter(
+        (m) =>
+          (m.category === "Coffee" || m.category === "Non-Coffee") &&
+          (m.stock === undefined || m.stock === -1 || m.stock > 0)
       );
-      if (coffeeAndDrinks.length > 0) {
-        const randomIndex = Math.floor(Math.random() * coffeeAndDrinks.length);
-        setRandomMenu(coffeeAndDrinks[randomIndex]);
+      const candidates = inStockDrinks.length > 0 ? inStockDrinks : menus.filter((m) => m.stock === undefined || m.stock === -1 || m.stock > 0);
+      if (candidates.length > 0) {
+        const randomIndex = Math.floor(Math.random() * candidates.length);
+        setRandomMenu(candidates[randomIndex]);
       }
     }
   }, [menus]);

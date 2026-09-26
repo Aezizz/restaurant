@@ -43,6 +43,25 @@ export default function CashierOrderPage() {
       .catch((err) => console.error("Error fetching menus:", err));
   }, []);
 
+  // ⚡ Socket listener untuk sinkronisasi stok otomatis secara real-time
+  useEffect(() => {
+    const handleStockUpdated = (updatedItems) => {
+      if (!Array.isArray(updatedItems) || updatedItems.length === 0) return;
+      const updatedMap = new Map(updatedItems.map((m) => [String(m._id), m]));
+      setMenus((prevMenus) =>
+        prevMenus.map((item) => {
+          const matched = updatedMap.get(String(item._id));
+          return matched ? { ...item, stock: matched.stock } : item;
+        })
+      );
+    };
+
+    socket.on("stock-updated", handleStockUpdated);
+    return () => {
+      socket.off("stock-updated", handleStockUpdated);
+    };
+  }, []);
+
   // Filter menu berdasarkan input search bar (nama, kategori, deskripsi)
   const filteredMenus = menus.filter((menu) => {
     const q = searchQuery.toLowerCase().trim();
@@ -56,8 +75,18 @@ export default function CashierOrderPage() {
 
   // Tambah menu ke keranjang kasir
   const handleAddToCart = (menu) => {
+    if (menu.stock !== undefined && menu.stock !== -1 && menu.stock <= 0) {
+      toast.error(`Stok "${menu.name}" sudah habis!`);
+      return;
+    }
+
     const existingIndex = cart.findIndex((item) => item._id === menu._id);
     if (existingIndex > -1) {
+      const currentQty = cart[existingIndex].quantity;
+      if (menu.stock !== undefined && menu.stock !== -1 && currentQty >= menu.stock) {
+        toast.warning(`Maksimal stok tercapai untuk "${menu.name}" (${menu.stock} porsi)`);
+        return;
+      }
       const newCart = [...cart];
       newCart[existingIndex].quantity += 1;
       setCart(newCart);
@@ -68,6 +97,11 @@ export default function CashierOrderPage() {
 
   // Update jumlah item
   const updateQuantity = (index, delta) => {
+    const item = cart[index];
+    if (delta > 0 && item.stock !== undefined && item.stock !== -1 && item.quantity >= item.stock) {
+      toast.warning(`Maksimal stok tercapai untuk "${item.name}" (${item.stock} porsi)`);
+      return;
+    }
     const newCart = [...cart];
     newCart[index].quantity += delta;
     if (newCart[index].quantity <= 0) {
@@ -212,36 +246,80 @@ export default function CashierOrderPage() {
         {/* Grid Menu yang sudah ter-filter */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 overflow-y-auto max-h-[68vh] pr-2">
           {filteredMenus.length > 0 ? (
-            filteredMenus.map((menu) => (
-              <div
-                key={menu._id}
-                onClick={() => handleAddToCart(menu)}
-                className="bg-white p-3 rounded-2xl border border-[#e8ded2]/60 shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group"
-              >
-                <div>
-                  <div className="w-full h-28 rounded-xl overflow-hidden bg-stone-100 mb-2">
-                    <img
-                      src={
-                        menu.image_url ||
-                        "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"
-                      }
-                      alt={menu.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
+            filteredMenus.map((menu) => {
+              const isOutOfStock = menu.stock !== undefined && menu.stock !== -1 && menu.stock < 1;
+              return (
+                <div
+                  key={menu._id}
+                  onClick={() => !isOutOfStock && handleAddToCart(menu)}
+                  className={`bg-white p-3 rounded-2xl border border-[#e8ded2]/60 shadow-xs transition-all flex flex-col justify-between group ${
+                    isOutOfStock ? "opacity-60 cursor-not-allowed" : "hover:shadow-md cursor-pointer"
+                  }`}
+                >
+                  <div>
+                    <div className="w-full h-28 rounded-xl overflow-hidden bg-stone-100 mb-2 relative">
+                      <img
+                        src={
+                          menu.image_url ||
+                          "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"
+                        }
+                        alt={menu.name}
+                        className={`w-full h-full object-cover transition-transform duration-300 ${
+                          isOutOfStock ? "grayscale" : "group-hover:scale-105"
+                        }`}
+                      />
+                      {isOutOfStock ? (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                          <span className="text-[10px] uppercase font-bold px-2 py-0.5 bg-red-600 text-white rounded-md">
+                            Stok Habis
+                          </span>
+                        </div>
+                      ) : menu.stock !== undefined && menu.stock !== -1 && menu.stock <= 5 ? (
+                        <span className="absolute top-1.5 right-1.5 text-[9px] uppercase font-bold px-1.5 py-0.5 bg-amber-500 text-white rounded shadow-xs">
+                          Sisa {menu.stock}
+                        </span>
+                      ) : null}
+                    </div>
+                    <div className="flex items-center justify-between gap-1">
+                      <h3 className="font-bold text-xs line-clamp-1">
+                        {menu.name}
+                      </h3>
+                      {menu.stock !== undefined && menu.stock !== -1 ? (
+                        menu.stock >= 1 ? (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                            Stok: {menu.stock}
+                          </span>
+                        ) : (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-50 text-red-600 border border-red-200 shrink-0">
+                            Habis
+                          </span>
+                        )
+                      ) : (
+                        <span className="text-[9px] font-medium text-stone-400 shrink-0">
+                          Tersedia (∞)
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs font-semibold text-[#5c1f2e] mt-1">
+                      Rp {menu.price?.toLocaleString("id-ID")}
+                    </p>
                   </div>
-                  <h3 className="font-bold text-xs line-clamp-1">
-                    {menu.name}
-                  </h3>
-                  <p className="text-xs font-semibold text-[#5c1f2e] mt-1">
-                    Rp {menu.price?.toLocaleString("id-ID")}
-                  </p>
+                  {isOutOfStock ? (
+                    <button
+                      disabled
+                      className="mt-3 w-full bg-stone-200 text-stone-400 py-1.5 rounded-xl text-xs font-bold cursor-not-allowed"
+                    >
+                      Stok Habis
+                    </button>
+                  ) : (
+                    <button className="mt-3 w-full bg-[#5c1f2e]/10 text-[#5c1f2e] group-hover:bg-[#5c1f2e] group-hover:text-white py-1.5 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1">
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Tambah</span>
+                    </button>
+                  )}
                 </div>
-                <button className="mt-3 w-full bg-[#5c1f2e]/10 text-[#5c1f2e] group-hover:bg-[#5c1f2e] group-hover:text-white py-1.5 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1">
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Tambah</span>
-                </button>
-              </div>
-            ))
+              );
+            })
           ) : (
             <div className="col-span-full text-center py-16 text-stone-400 text-xs">
               Menu "{searchQuery}" tidak ditemukan.

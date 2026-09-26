@@ -126,9 +126,24 @@ export default function ProductDetailModal({ product, onClose, onAddToCart }) {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
           <div className="absolute bottom-4 left-4 right-4 text-white">
-            <span className="text-[10px] uppercase tracking-wider bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-md font-semibold">
-              {product.category}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] uppercase tracking-wider bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-md font-semibold">
+                {product.category}
+              </span>
+              {product.stock !== undefined && product.stock !== -1 && (
+                <span
+                  className={`text-[10px] uppercase tracking-wider backdrop-blur-md px-2.5 py-1 rounded-md font-bold ${
+                    product.stock <= 0
+                      ? "bg-red-600/90 text-white"
+                      : product.stock <= 5
+                      ? "bg-amber-500/90 text-white"
+                      : "bg-emerald-600/90 text-white"
+                  }`}
+                >
+                  {product.stock <= 0 ? "Stok Habis" : `Tersisa: ${product.stock}`}
+                </span>
+              )}
+            </div>
             <h1 className="text-2xl sm:text-3xl font-bold font-serif mt-1 drop-shadow-md">
               {product.name}
             </h1>
@@ -292,27 +307,45 @@ export default function ProductDetailModal({ product, onClose, onAddToCart }) {
         <div className="flex items-center gap-3 bg-[#fcf9f5] border border-[#e8ded2] p-1.5 rounded-2xl">
           <button
             onClick={() => setQuantity(Math.max(1, quantity - 1))}
-            className="w-9 h-9 bg-white rounded-xl border border-[#e8ded2] font-bold text-base flex items-center justify-center hover:bg-[#e8ded2]/50 transition-colors cursor-pointer"
+            disabled={product.stock !== undefined && product.stock !== -1 && product.stock <= 0}
+            className="w-9 h-9 bg-white rounded-xl border border-[#e8ded2] font-bold text-base flex items-center justify-center hover:bg-[#e8ded2]/50 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
             -
           </button>
-          <span className="w-6 text-center font-bold text-sm">{quantity}</span>
+          <span className="w-6 text-center font-bold text-sm">
+            {product.stock !== undefined && product.stock !== -1 && product.stock <= 0 ? 0 : quantity}
+          </span>
           <button
-            onClick={() => setQuantity(quantity + 1)}
-            className="w-9 h-9 bg-white rounded-xl border border-[#e8ded2] font-bold text-base flex items-center justify-center hover:bg-[#e8ded2]/50 transition-colors cursor-pointer"
+            onClick={() => {
+              if (product.stock !== undefined && product.stock !== -1 && quantity >= product.stock) {
+                return;
+              }
+              setQuantity(quantity + 1);
+            }}
+            disabled={product.stock !== undefined && product.stock !== -1 && (product.stock <= 0 || quantity >= product.stock)}
+            className="w-9 h-9 bg-white rounded-xl border border-[#e8ded2] font-bold text-base flex items-center justify-center hover:bg-[#e8ded2]/50 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
             +
           </button>
         </div>
 
         {/* Tombol Add to Cart */}
-        <button
-          onClick={handleAdd}
-          className="flex-1 py-3.5 sm:py-4 bg-[#5c1f2e] hover:bg-[#431420] text-white rounded-2xl font-bold text-xs sm:text-sm tracking-wider uppercase shadow-md transition-all active:scale-98 flex justify-between px-6 cursor-pointer"
-        >
-          <span>+ Tambah ke Keranjang</span>
-          <span>Rp {totalPrice.toLocaleString("id-ID")}</span>
-        </button>
+        {product.stock !== undefined && product.stock !== -1 && product.stock <= 0 ? (
+          <button
+            disabled
+            className="flex-1 py-3.5 sm:py-4 bg-stone-200 text-stone-400 rounded-2xl font-bold text-xs sm:text-sm tracking-wider uppercase cursor-not-allowed flex items-center justify-center px-6"
+          >
+            <span>Stok Habis</span>
+          </button>
+        ) : (
+          <button
+            onClick={handleAdd}
+            className="flex-1 py-3.5 sm:py-4 bg-[#5c1f2e] hover:bg-[#431420] text-white rounded-2xl font-bold text-xs sm:text-sm tracking-wider uppercase shadow-md transition-all active:scale-98 flex justify-between px-6 cursor-pointer"
+          >
+            <span>+ Tambah ke Keranjang</span>
+            <span>Rp {totalPrice.toLocaleString("id-ID")}</span>
+          </button>
+        )}
       </div>
     </div>
   );

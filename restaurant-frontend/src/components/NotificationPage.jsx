@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Bell, X } from "lucide-react";
-import { io } from "socket.io-client";
-
-// Base URL API, diambil dari .env (VITE_API_URL). Kalau .env gak ada / lupa
-// di-set, fallback ke localhost:3000 biar dev di laptop sendiri tetep jalan.
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
-
-const socket = io(API_URL);
+import { socket, API_BASE_URL } from "../services/socket";
 
 export default function NotificationPage({ onClose }) {
   const [orderStatus, setOrderStatus] = useState(null);
@@ -15,7 +9,7 @@ export default function NotificationPage({ onClose }) {
   useEffect(() => {
     // Fetch status terakhir dari API saat halaman dibuka
     if (customerName) {
-      fetch(`${API_URL}/api/orders/customer/${encodeURIComponent(customerName)}`)
+      fetch(`${API_BASE_URL}/api/orders/customer/${encodeURIComponent(customerName)}`)
         .then((res) => res.json())
         .then((result) => {
           if (result.success) setOrderStatus(result.data);

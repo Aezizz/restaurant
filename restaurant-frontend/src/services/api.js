@@ -162,3 +162,19 @@ export const deleteMenuApi = async (menuId, token = null) => {
     throw error;
   }
 };
+
+// 5. Update stok menu (Khusus Admin) — dedicated PATCH endpoint
+// mode: "set" (ganti nilai), "add" (tambah), "subtract" (kurangi), "reset" (unlimited)
+export const updateMenuStockApi = async (menuId, mode, amount = 0, token = null) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/menus/${menuId}/stock`, {
+      method: "PATCH",
+      headers: getAuthHeaders(token),
+      body: JSON.stringify({ mode, amount }),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Error updating menu stock:", error);
+    throw error;
+  }
+};

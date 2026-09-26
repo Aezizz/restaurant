@@ -76,7 +76,7 @@ router.post(
   requireRoles("admin"),
   async (req, res) => {
     try {
-      const { name, category, price, image_url, description } = req.body;
+      const { name, category, price, image_url, description, stock } = req.body;
 
       if (!name || typeof name !== "string" || !name.trim()) {
         return res.status(400).json({
@@ -100,12 +100,26 @@ router.post(
         });
       }
 
+      // Validasi stok: jika tidak diisi, gunakan default 10
+      let numStock = 10;
+      if (stock !== undefined && stock !== null && stock !== "") {
+        numStock = Number(stock);
+        if (isNaN(numStock) || numStock < -1) {
+          return res.status(400).json({
+            success: false,
+            message: "Nilai stok tidak valid! Isi angka >= 0 atau kosongkan untuk menggunakan stok default (10).",
+          });
+        }
+        numStock = Math.floor(numStock); // Pastikan bulat
+      }
+
       const newMenu = new Menu({
         name: name.trim(),
         category: category.trim(),
         price: numPrice,
         image_url: image_url || "",
         description: description || "",
+        stock: numStock,
       });
 
       const savedMenu = await newMenu.save();
@@ -121,6 +135,7 @@ router.post(
           name: savedMenu.name,
           price: savedMenu.price,
           category: savedMenu.category,
+          stock: savedMenu.stock,
         },
         ip_address: req.ip,
       });
@@ -144,7 +159,7 @@ router.put(
   async (req, res) => {
     try {
       const { id } = req.params;
-      const { name, category, price, image_url, description } = req.body;
+      const { name, category, price, image_url, description, stock } = req.body;
 
       const oldMenu = await Menu.findById(id);
       if (!oldMenu) {
@@ -170,6 +185,18 @@ router.put(
       if (image_url !== undefined) updateData.image_url = image_url;
       if (description !== undefined) updateData.description = description;
 
+      // Update stok: -1 = unlimited, >= 0 = stok terbatas
+      if (stock !== undefined && stock !== null && stock !== "") {
+        const numStock = Math.floor(Number(stock));
+        if (isNaN(numStock) || numStock < -1) {
+          return res.status(400).json({
+            success: false,
+            message: "Nilai stok tidak valid!",
+          });
+        }
+        updateData.stock = numStock;
+      }
+
       const updatedMenu = await Menu.findByIdAndUpdate(id, updateData, {
         new: true,
       });
@@ -185,11 +212,13 @@ router.put(
           name: oldMenu.name,
           price: oldMenu.price,
           category: oldMenu.category,
+          stock: oldMenu.stock,
         },
         new_values: {
           name: updatedMenu.name,
           price: updatedMenu.price,
           category: updatedMenu.category,
+          stock: updatedMenu.stock,
         },
         ip_address: req.ip,
       });
@@ -201,6 +230,75 @@ router.put(
       });
     } catch (error) {
       res.status(400).json({ success: false, message: error.message });
+    }
+  }
+);
+
+// 3b. PATCH: Update stok menu saja (Khusus Admin) — endpoint dedicated stok
+router.patch(
+  "/:id/stock",
+  verifyTokenMiddleware,
+  requireRoles("admin"),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      // mode: "set" (ganti nilai), "add" (tambah), "subtract" (kurangi), "reset" (unlimited/-1)
+      const { mode = "set", amount } = req.body;
+
+      const menu = await Menu.findById(id);
+      if (!menu) {
+        return res.status(404).json({ success: false, message: "Menu tidak ditemukan!" });
+      }
+
+      const oldStock = menu.stock;
+      let newStock;
+
+      if (mode === "reset") {
+        newStock = -1; // Ubah menjadi unlimited
+      } else {
+        const numAmount = Math.floor(Number(amount));
+        if (isNaN(numAmount)) {
+          return res.status(400).json({ success: false, message: "Nilai amount harus berupa angka!" });
+        }
+
+        if (mode === "set") {
+          newStock = Math.max(-1, numAmount);
+        } else if (mode === "add") {
+          newStock = oldStock === -1 ? -1 : Math.max(0, oldStock + numAmount);
+        } else if (mode === "subtract") {
+          newStock = oldStock === -1 ? -1 : Math.max(0, oldStock - numAmount);
+        } else {
+          return res.status(400).json({ success: false, message: "Mode tidak valid! Gunakan: set, add, subtract, reset" });
+        }
+      }
+
+      menu.stock = newStock;
+      await menu.save();
+
+      // 📜 Audit Trail
+      await AuditLog.create({
+        user_id: req.user?.id || null,
+        user_email: req.user?.email || "ADMIN",
+        action: "UPDATE_STOCK",
+        target_resource: "Menu",
+        resource_id: id,
+        old_values: { stock: oldStock },
+        new_values: { stock: newStock, mode },
+        ip_address: req.ip,
+      });
+
+      // ⚡ Emit event WebSocket pembaruan stok real-time
+      if (req.io) {
+        req.io.emit("stock-updated", [menu]);
+      }
+
+      res.status(200).json({
+        success: true,
+        data: menu,
+        message: `Stok "${menu.name}" berhasil diperbarui: ${oldStock === -1 ? "∞" : oldStock} → ${newStock === -1 ? "∞" : newStock}`,
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
     }
   }
 );

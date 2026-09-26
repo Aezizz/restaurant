@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Image as ImageIcon, Check, UtensilsCrossed } from "lucide-react";
+import { X, Image as ImageIcon, Check, UtensilsCrossed, Package } from "lucide-react";
 
 const CATEGORIES = [
   "Coffee",
@@ -21,6 +21,7 @@ export default function MenuFormModal({
     price: "",
     image_url: "",
     description: "",
+    stock: "",
   });
 
   const isEditMode = Boolean(initialData?._id);
@@ -33,6 +34,8 @@ export default function MenuFormModal({
         price: initialData.price || "",
         image_url: initialData.image_url || "",
         description: initialData.description || "",
+        // stock: -1 berarti unlimited, tampilkan kosong di input
+        stock: initialData.stock !== undefined && initialData.stock !== -1 ? String(initialData.stock) : "",
       });
     } else {
       setFormData({
@@ -41,6 +44,7 @@ export default function MenuFormModal({
         price: "",
         image_url: "",
         description: "",
+        stock: "",
       });
     }
   }, [initialData, isOpen]);
@@ -52,6 +56,8 @@ export default function MenuFormModal({
     onSubmit({
       ...formData,
       price: Number(formData.price),
+      // Kosong = unlimited (-1), isi angka = stok terbatas
+      stock: formData.stock === "" || formData.stock === null ? -1 : Math.max(-1, Math.floor(Number(formData.stock))),
     });
   };
 
@@ -138,6 +144,40 @@ export default function MenuFormModal({
                 className="w-full text-xs p-3 bg-[#fcf9f5] border border-[#e8ded2] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5c1f2e] font-medium"
               />
             </div>
+          </div>
+
+          {/* Stok Produk */}
+          <div>
+            <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
+              Stok Produk
+              <span className="ml-2 text-[10px] font-normal text-stone-400 normal-case tracking-normal">
+                (kosongkan = tak terbatas)
+              </span>
+            </label>
+            <div className="relative flex items-center">
+              <Package className="absolute left-3 w-4 h-4 text-stone-400" />
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={formData.stock}
+                onChange={(e) =>
+                  setFormData({ ...formData, stock: e.target.value })
+                }
+                placeholder="Contoh: 50  (kosongkan = ∞ tak terbatas)"
+                className="w-full pl-9 pr-3 py-2.5 bg-[#fcf9f5] border border-[#e8ded2] rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#5c1f2e]"
+              />
+            </div>
+            {/* Indikator visual stok */}
+            <p className="mt-1.5 text-[10px] text-stone-400">
+              {formData.stock === "" || formData.stock === null
+                ? "✅ Stok: Tak terbatas (unlimited)"
+                : Number(formData.stock) === 0
+                  ? "🔴 Stok: Habis — pelanggan tidak bisa memesan menu ini"
+                  : Number(formData.stock) > 0
+                    ? `📦 Stok tersedia: ${formData.stock} porsi`
+                    : "⚠️ Masukkan angka 0 atau lebih"}
+            </p>
           </div>
 
           {/* URL Gambar Produk */}

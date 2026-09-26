@@ -57,11 +57,16 @@ export default function LoginPage() {
 
     const endpoint = isLoginMode ? "/api/auth/login" : "/api/auth/register";
 
+    // 💡 FIX: Filter payload agar field 'name' tidak ikut terkirim saat mode login
+    const payload = isLoginMode
+      ? { email: formData.email, password: formData.password }
+      : formData;
+
     try {
       const res = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -80,9 +85,6 @@ export default function LoginPage() {
           toast.success(`Selamat datang, ${name}!`);
 
           // 🚀 ALUR REDIRECT STRICT POST-LOGIN:
-          // Admin -> /admin
-          // Cashier -> /cashier
-          // Customer -> /menu
           const targetUrl = getRedirectPathByRole(role);
           navigate(targetUrl, { replace: true });
         } else {
@@ -95,7 +97,9 @@ export default function LoginPage() {
       }
     } catch (err) {
       console.error("Auth error:", err);
-      setErrorMessage("Gagal terhubung ke server backend. Periksa koneksi Anda.");
+      setErrorMessage(
+        "Gagal terhubung ke server backend. Periksa koneksi Anda.",
+      );
     } finally {
       setLoading(false);
     }
@@ -145,7 +149,7 @@ export default function LoginPage() {
                 <input
                   type="text"
                   name="name"
-                  required
+                  required={!isLoginMode}
                   value={formData.name}
                   onChange={handleChange}
                   placeholder="Nama Lengkap Anda"
@@ -210,7 +214,9 @@ export default function LoginPage() {
               <span>Memproses...</span>
             ) : (
               <>
-                <span>{isLoginMode ? "Masuk ke Sistem" : "Daftar Sekarang"}</span>
+                <span>
+                  {isLoginMode ? "Masuk ke Sistem" : "Daftar Sekarang"}
+                </span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}

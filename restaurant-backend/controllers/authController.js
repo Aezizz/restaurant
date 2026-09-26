@@ -82,8 +82,48 @@ export const loginUser = async (req, res) => {
         .json({ success: false, message: "Email tidak terdaftar!" });
     }
 
-    // Validasi password
-    const isMatch = await bcrypt.compare(password, user.password);
+    // 🔐 Validasi Password Cerdas (Mendukung Bcrypt, MD5 Compass, dan Plain Text)
+    let isMatch = false;
+    const dbPassword = user.password || "";
+
+    // 1. Cek apakah password di database merupakan Bcrypt hash standar ($2a$, $2b$, $2y$)
+    const isBcryptHash = /^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(dbPassword);
+
+    if (isBcryptHash) {
+      isMatch = await bcrypt.compare(password, dbPassword);
+    } else {
+      // 2. Fallback: Cek jika akun dibuat manual via MongoDB Compass dengan Plain Text
+      if (dbPassword === password) {
+        isMatch = true;
+      }
+      // 3. Fallback: Cek jika akun dibuat manual via Compass menggunakan MD5 hash (32 karakter hex)
+      else if (dbPassword.length === 32) {
+        const inputMd5 = crypto.createHash("md5").update(password).digest("hex");
+        if (dbPassword.toLowerCase() === inputMd5.toLowerCase()) {
+          isMatch = true;
+        }
+      }
+      // 4. Fallback: Cek jika akun dibuat manual menggunakan SHA-256 (64 karakter hex)
+      else if (dbPassword.length === 64) {
+        const inputSha256 = crypto.createHash("sha256").update(password).digest("hex");
+        if (dbPassword.toLowerCase() === inputSha256.toLowerCase()) {
+          isMatch = true;
+        }
+      }
+
+      // 🔄 OTOMATISASI UPGRADE: Jika cocok via Plain Text/MD5, langsung re-hash ke Bcrypt di database
+      if (isMatch) {
+        try {
+          const salt = await bcrypt.genSalt(10);
+          user.password = await bcrypt.hash(password, salt);
+          await user.save();
+          console.log(`✅ [AUTO-MIGRATION] Password untuk user '${user.email}' berhasil diupgrade ke Bcrypt hash!`);
+        } catch (upgradeErr) {
+          console.error("Gagal auto-upgrade password hash:", upgradeErr);
+        }
+      }
+    }
+
     if (!isMatch) {
       return res
         .status(400)
@@ -213,5 +253,48 @@ export const resetPassword = async (req, res) => {
     res
       .status(500)
       .json({ success: false, message: "Terjadi kesalahan pada server." });
+  }
+};
+
+// 🛠️ Seed / Reset Admin User Controller (Endpoint Bantuan Cepat)
+export const seedAdmin = async (req, res) => {
+  try {
+    const { email, password, name, role } = req.body || {};
+    const targetEmail = (email || "admin@vynacoffee.com").trim().toLowerCase();
+    const targetPassword = password || "admin123";
+    const targetName = name || "Administrator Vyna";
+    const targetRole = role || "admin";
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(targetPassword, salt);
+
+    let user = await User.findOne({ email: targetEmail });
+    if (user) {
+      user.password = hashedPassword;
+      user.role = targetRole;
+      user.name = targetName;
+      await user.save();
+    } else {
+      user = new User({
+        name: targetName,
+        email: targetEmail,
+        password: hashedPassword,
+        role: targetRole,
+      });
+      await user.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Akun ${targetEmail} (${targetRole}) berhasil dibuat/diperbarui dengan password Bcrypt yang valid!`,
+      user: {
+        email: user.email,
+        role: user.role,
+        name: user.name,
+      },
+    });
+  } catch (error) {
+    console.error("Error seedAdmin:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };

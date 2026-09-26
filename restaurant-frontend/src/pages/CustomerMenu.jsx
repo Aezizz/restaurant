@@ -111,7 +111,8 @@ export default function CustomerMenu() {
       if (
         data.customer_name &&
         customerName &&
-        data.customer_name.trim().toLowerCase() === customerName.trim().toLowerCase()
+        data.customer_name.trim().toLowerCase() ===
+          customerName.trim().toLowerCase()
       ) {
         toast.success(
           `Pesanan Siap! Pesanan untuk ${data.customer_name} sudah siap diambil di kasir!`,
@@ -136,6 +137,25 @@ export default function CustomerMenu() {
       socket.off("order-ready");
     };
   }, [customerName]);
+
+  // --- Socket listener: update stok real-time saat ada order / perubahan stok admin ---
+  useEffect(() => {
+    const handleStockUpdated = (updatedItems) => {
+      if (!Array.isArray(updatedItems) || updatedItems.length === 0) return;
+      const updatedMap = new Map(updatedItems.map((m) => [String(m._id), m]));
+      setMenus((prevMenus) =>
+        prevMenus.map((item) => {
+          const matched = updatedMap.get(String(item._id));
+          return matched ? { ...item, stock: matched.stock } : item;
+        }),
+      );
+    };
+
+    socket.on("stock-updated", handleStockUpdated);
+    return () => {
+      socket.off("stock-updated", handleStockUpdated);
+    };
+  }, []);
 
   // --- Drag horizontal (kategori chip) ---
   const handleMouseDown = (e) => {
@@ -390,27 +410,83 @@ export default function CustomerMenu() {
                 key={menu._id}
                 data-aos="fade-up"
                 data-aos-delay={index * 50}
-                onClick={() => handleCardClick(menu)}
-                className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-[#e8ded2]/60 flex flex-col justify-between group cursor-pointer"
+                onClick={() => {
+                  if (
+                    menu.stock !== undefined &&
+                    menu.stock !== -1 &&
+                    menu.stock <= 0
+                  ) {
+                    toast.info(`Maaf, stok untuk "${menu.name}" sedang habis.`);
+                    return;
+                  }
+                  handleCardClick(menu);
+                }}
+                className={`bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-[#e8ded2]/60 flex flex-col justify-between group ${
+                  menu.stock !== undefined &&
+                  menu.stock !== -1 &&
+                  menu.stock <= 0
+                    ? "opacity-75 cursor-not-allowed"
+                    : "cursor-pointer"
+                }`}
               >
                 <div>
-                  <div className="w-full h-48 overflow-hidden bg-gray-100">
+                  <div className="w-full h-48 overflow-hidden bg-gray-100 relative">
                     <img
                       src={
                         menu.image_url ||
                         "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"
                       }
                       alt={menu.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className={`w-full h-full object-cover transition-transform duration-500 ${
+                        menu.stock !== undefined &&
+                        menu.stock !== -1 &&
+                        menu.stock <= 0
+                          ? "grayscale"
+                          : "group-hover:scale-105"
+                      }`}
                       draggable={false}
                     />
+                    {/* Badge Habis / Status Stok di atas gambar */}
+                    {menu.stock !== undefined &&
+                    menu.stock !== -1 &&
+                    menu.stock < 1 ? (
+                      <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center">
+                        <span className="px-3.5 py-1.5 bg-red-600/90 text-white font-bold text-xs rounded-full uppercase tracking-wider shadow-lg">
+                          Stok Habis
+                        </span>
+                      </div>
+                    ) : menu.stock !== undefined &&
+                      menu.stock !== -1 &&
+                      menu.stock <= 5 ? (
+                      <span className="absolute top-3 right-3 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 bg-amber-500 text-white rounded-md shadow-xs">
+                        Sisa {menu.stock}
+                      </span>
+                    ) : null}
                   </div>
 
                   <div className="p-5">
-                    <span className="text-xs uppercase tracking-wider bg-[#e8ded2]/50 text-[#5c1f2e] px-2.5 py-1 rounded-md font-semibold">
-                      {menu.category}
-                    </span>
-                    <h3 className="text-lg font-bold font-serif mt-2 mb-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs uppercase tracking-wider bg-[#e8ded2]/50 text-[#5c1f2e] px-2.5 py-1 rounded-md font-semibold">
+                        {menu.category}
+                      </span>
+                      {/* Label Status Stok */}
+                      {menu.stock !== undefined && menu.stock !== -1 ? (
+                        menu.stock >= 1 ? (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            Menu Tersedia
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-red-50 text-red-600 border border-red-200">
+                            Stok Habis
+                          </span>
+                        )
+                      ) : (
+                        <span className="text-[10px] font-medium text-stone-400">
+                          Stok Tersedia
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="text-lg font-bold font-serif mt-2 mb-1 line-clamp-1">
                       {menu.name}
                     </h3>
                     <p className="text-base font-bold text-[#5c1f2e]">
@@ -420,10 +496,21 @@ export default function CustomerMenu() {
                 </div>
 
                 <div className="p-5 pt-0">
-                  <button className="w-full py-2.5 bg-[#5c1f2e] text-white rounded-2xl font-semibold hover:bg-[#431420] transition-colors duration-200 cursor-pointer shadow-sm active:scale-95 text-xs flex items-center justify-center gap-1.5">
-                    <span>Pilih Menu</span>
-                    <Search className="w-3.5 h-3.5" />
-                  </button>
+                  {menu.stock !== undefined &&
+                  menu.stock !== -1 &&
+                  menu.stock < 1 ? (
+                    <button
+                      disabled
+                      className="w-full py-2.5 bg-stone-200 text-stone-400 rounded-2xl font-semibold cursor-not-allowed shadow-none text-xs flex items-center justify-center gap-1.5"
+                    >
+                      <span>Stok Habis</span>
+                    </button>
+                  ) : (
+                    <button className="w-full py-2.5 bg-[#5c1f2e] text-white rounded-2xl font-semibold hover:bg-[#431420] transition-colors duration-200 cursor-pointer shadow-sm active:scale-95 text-xs flex items-center justify-center gap-1.5">
+                      <span>Tambah ke Keranjang</span>
+                      <Search className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               </div>
             ))
