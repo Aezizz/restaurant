@@ -38,7 +38,7 @@ export const registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Tetapkan role default 'customer', cegah penetapan 'admin' via pendaftaran publik biasa
-    const userRole = role === "admin" ? "customer" : (role || "customer");
+    const userRole = role === "admin" ? "customer" : role || "customer";
 
     // Simpan user baru
     const newUser = new User({
@@ -87,7 +87,9 @@ export const loginUser = async (req, res) => {
     const dbPassword = user.password || "";
 
     // 1. Cek apakah password di database merupakan Bcrypt hash standar ($2a$, $2b$, $2y$)
-    const isBcryptHash = /^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(dbPassword);
+    const isBcryptHash = /^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(
+      dbPassword,
+    );
 
     if (isBcryptHash) {
       isMatch = await bcrypt.compare(password, dbPassword);
@@ -98,14 +100,20 @@ export const loginUser = async (req, res) => {
       }
       // 3. Fallback: Cek jika akun dibuat manual via Compass menggunakan MD5 hash (32 karakter hex)
       else if (dbPassword.length === 32) {
-        const inputMd5 = crypto.createHash("md5").update(password).digest("hex");
+        const inputMd5 = crypto
+          .createHash("md5")
+          .update(password)
+          .digest("hex");
         if (dbPassword.toLowerCase() === inputMd5.toLowerCase()) {
           isMatch = true;
         }
       }
       // 4. Fallback: Cek jika akun dibuat manual menggunakan SHA-256 (64 karakter hex)
       else if (dbPassword.length === 64) {
-        const inputSha256 = crypto.createHash("sha256").update(password).digest("hex");
+        const inputSha256 = crypto
+          .createHash("sha256")
+          .update(password)
+          .digest("hex");
         if (dbPassword.toLowerCase() === inputSha256.toLowerCase()) {
           isMatch = true;
         }
@@ -117,7 +125,9 @@ export const loginUser = async (req, res) => {
           const salt = await bcrypt.genSalt(10);
           user.password = await bcrypt.hash(password, salt);
           await user.save();
-          console.log(`✅ [AUTO-MIGRATION] Password untuk user '${user.email}' berhasil diupgrade ke Bcrypt hash!`);
+          console.log(
+            `✅ [AUTO-MIGRATION] Password untuk user '${user.email}' berhasil diupgrade ke Bcrypt hash!`,
+          );
         } catch (upgradeErr) {
           console.error("Gagal auto-upgrade password hash:", upgradeErr);
         }
@@ -143,7 +153,7 @@ export const loginUser = async (req, res) => {
     const token = jwt.sign(
       { id: user._id, email: user.email, role: user.role || "customer" },
       jwtSecret,
-      { expiresIn: "7d" },
+      { expiresIn: "1d" },
     );
 
     res.status(200).json({
@@ -216,7 +226,11 @@ export const forgotPassword = async (req, res) => {
     console.error("❌ [FORGOT PASSWORD ERROR]:", error);
     res
       .status(500)
-      .json({ success: false, message: "Terjadi kesalahan pada server.", error: error.message });
+      .json({
+        success: false,
+        message: "Terjadi kesalahan pada server.",
+        error: error.message,
+      });
   }
 };
 

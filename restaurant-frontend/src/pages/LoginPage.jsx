@@ -11,6 +11,8 @@ import {
   ArrowRight,
   UtensilsCrossed,
   AlertCircle,
+  Eye, // Ditambahkan untuk ikon mata terbuka
+  EyeOff, // Ditambahkan untuk ikon mata tertutup
 } from "lucide-react";
 import { API_BASE_URL } from "../services/socket";
 import {
@@ -32,6 +34,9 @@ export default function LoginPage() {
   });
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  // 💡 State baru untuk mengontrol visibilitas password
+  const [showPassword, setShowPassword] = useState(false);
 
   // Cek jika sudah terautentikasi sebelumnya -> langsung arahkan ke rute role
   useEffect(() => {
@@ -191,17 +196,32 @@ export default function LoginPage() {
                 </Link>
               )}
             </div>
+
+            {/* Input Password dengan Tombol Show/Hide */}
             <div className="relative flex items-center">
-              <KeyRound className="absolute left-3.5 w-4 h-4 text-stone-400" />
+              <KeyRound className="absolute left-3.5 w-4 h-4 text-stone-400 z-10 pointer-events-none" />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 name="password"
                 required
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-2.5 bg-[#fcf9f5] border border-[#e8ded2] rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#5c1f2e]"
+                className="w-full pl-10 pr-10 py-2.5 bg-[#fcf9f5] border border-[#e8ded2] rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#5c1f2e]"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3.5 z-20 text-stone-400 hover:text-[#5c1f2e] focus:outline-none cursor-pointer p-1 rounded-md hover:bg-stone-100 transition-colors flex items-center justify-center"
+                aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+                title={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
             </div>
           </div>
 

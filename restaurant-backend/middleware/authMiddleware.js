@@ -26,9 +26,15 @@ export const verifyTokenMiddleware = (req, res, next) => {
     req.user = decoded; // Menyimpan data user (id, email, role) ke req.user
     next();
   } catch (err) {
-    return res.status(403).json({
+    // Jika token kedaluwarsa, jwt.verify akan melempar err (TokenExpiredError)
+    const statusCode = err.name === "TokenExpiredError" ? 401 : 403;
+    const message =
+      err.name === "TokenExpiredError"
+        ? "Sesi Anda telah habis, silakan masuk kembali."
+        : "Token tidak valid.";
+    return res.status(statusCode).json({
       success: false,
-      message: "Token tidak valid atau sudah kedaluwarsa.",
+      message: message,
     });
   }
 };

@@ -1,20 +1,10 @@
 import { API_BASE_URL } from "./socket";
-
-// Helper untuk mengambil token dan membentuk headers autentikasi
-export const getAuthHeaders = (token = null) => {
-  const authToken = token || (typeof window !== "undefined" ? localStorage.getItem("userToken") : null);
-  return {
-    "Content-Type": "application/json",
-    ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-  };
-};
+import { fetchWithAuth } from "../utils/apiHandler";
 
 // 📋 Ambil semua pesanan (Khusus Cashier, Kitchen, Admin)
-export const fetchOrdersApi = async (token = null) => {
+export const fetchOrdersApi = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/orders`, {
-      headers: getAuthHeaders(token),
-    });
+    const response = await fetchWithAuth(`${API_BASE_URL}/api/orders`);
     return await response.json();
   } catch (error) {
     console.error("Error fetching orders:", error);
@@ -23,13 +13,15 @@ export const fetchOrdersApi = async (token = null) => {
 };
 
 // 🔄 Update status pesanan
-export const updateOrderStatusApi = async (orderId, status, token = null) => {
+export const updateOrderStatusApi = async (orderId, status) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}/status`, {
-      method: "PUT",
-      headers: getAuthHeaders(token),
-      body: JSON.stringify({ status }),
-    });
+    const response = await fetchWithAuth(
+      `${API_BASE_URL}/api/orders/${orderId}/status`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ status }),
+      },
+    );
     return await response.json();
   } catch (error) {
     console.error("Error updating order status:", error);
@@ -38,12 +30,14 @@ export const updateOrderStatusApi = async (orderId, status, token = null) => {
 };
 
 // 🔄 Reset nomor antrian harian (Admin)
-export const resetQueueApi = async (token = null) => {
+export const resetQueueApi = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/orders/reset-queue`, {
-      method: "POST",
-      headers: getAuthHeaders(token),
-    });
+    const response = await fetchWithAuth(
+      `${API_BASE_URL}/api/orders/reset-queue`,
+      {
+        method: "POST",
+      },
+    );
     return await response.json();
   } catch (error) {
     console.error("Error resetting queue:", error);
@@ -52,12 +46,14 @@ export const resetQueueApi = async (token = null) => {
 };
 
 // 🗑️ Bersihkan pesanan yang selesai (Admin)
-export const resetCompletedOrdersApi = async (token = null) => {
+export const resetCompletedOrdersApi = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/orders/completed`, {
-      method: "DELETE",
-      headers: getAuthHeaders(token),
-    });
+    const response = await fetchWithAuth(
+      `${API_BASE_URL}/api/orders/completed`,
+      {
+        method: "DELETE",
+      },
+    );
     return await response.json();
   } catch (error) {
     console.error("Error deleting completed orders:", error);
@@ -66,11 +62,10 @@ export const resetCompletedOrdersApi = async (token = null) => {
 };
 
 // 📤 Ekspor pesanan ke Google Sheets (Admin & Cashier)
-export const exportOrdersApi = async (ordersData = null, token = null) => {
+export const exportOrdersApi = async (ordersData = null) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/orders/export`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/api/orders/export`, {
       method: "POST",
-      headers: getAuthHeaders(token),
       body: JSON.stringify(ordersData ? { orders: ordersData } : {}),
     });
     return await response.json();
@@ -81,11 +76,11 @@ export const exportOrdersApi = async (ordersData = null, token = null) => {
 };
 
 // 📊 Statistik Pesanan Harian (Admin, Cashier, Kitchen)
-export const getDailyStatsApi = async (token = null) => {
+export const getDailyStatsApi = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/orders/daily-stats`, {
-      headers: getAuthHeaders(token),
-    });
+    const response = await fetchWithAuth(
+      `${API_BASE_URL}/api/orders/daily-stats`,
+    );
     return await response.json();
   } catch (error) {
     console.error("Error fetching daily stats:", error);
@@ -94,11 +89,11 @@ export const getDailyStatsApi = async (token = null) => {
 };
 
 // 📊 Statistik Penjualan 7 Hari Terakhir untuk Grafik Mingguan (Admin)
-export const getWeeklyStatsApi = async (token = null) => {
+export const getWeeklyStatsApi = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/orders/weekly-stats`, {
-      headers: getAuthHeaders(token),
-    });
+    const response = await fetchWithAuth(
+      `${API_BASE_URL}/api/orders/weekly-stats`,
+    );
     return await response.json();
   } catch (error) {
     console.error("Error fetching weekly stats:", error);
@@ -120,11 +115,10 @@ export const fetchMenusApi = async () => {
 };
 
 // 2. Tambah menu baru (Khusus Admin)
-export const createMenuApi = async (menuData, token = null) => {
+export const createMenuApi = async (menuData) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/menus`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/api/menus`, {
       method: "POST",
-      headers: getAuthHeaders(token),
       body: JSON.stringify(menuData),
     });
     return await response.json();
@@ -135,13 +129,15 @@ export const createMenuApi = async (menuData, token = null) => {
 };
 
 // 3. Update menu (Khusus Admin)
-export const updateMenuApi = async (menuId, menuData, token = null) => {
+export const updateMenuApi = async (menuId, menuData) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/menus/${menuId}`, {
-      method: "PUT",
-      headers: getAuthHeaders(token),
-      body: JSON.stringify(menuData),
-    });
+    const response = await fetchWithAuth(
+      `${API_BASE_URL}/api/menus/${menuId}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(menuData),
+      },
+    );
     return await response.json();
   } catch (error) {
     console.error("Error updating menu:", error);
@@ -150,12 +146,14 @@ export const updateMenuApi = async (menuId, menuData, token = null) => {
 };
 
 // 4. Hapus menu (Khusus Admin)
-export const deleteMenuApi = async (menuId, token = null) => {
+export const deleteMenuApi = async (menuId) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/menus/${menuId}`, {
-      method: "DELETE",
-      headers: getAuthHeaders(token),
-    });
+    const response = await fetchWithAuth(
+      `${API_BASE_URL}/api/menus/${menuId}`,
+      {
+        method: "DELETE",
+      },
+    );
     return await response.json();
   } catch (error) {
     console.error("Error deleting menu:", error);
@@ -163,15 +161,16 @@ export const deleteMenuApi = async (menuId, token = null) => {
   }
 };
 
-// 5. Update stok menu (Khusus Admin) — dedicated PATCH endpoint
-// mode: "set" (ganti nilai), "add" (tambah), "subtract" (kurangi), "reset" (unlimited)
-export const updateMenuStockApi = async (menuId, mode, amount = 0, token = null) => {
+// 5. Update stok menu (Khusus Admin)
+export const updateMenuStockApi = async (menuId, mode, amount = 0) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/menus/${menuId}/stock`, {
-      method: "PATCH",
-      headers: getAuthHeaders(token),
-      body: JSON.stringify({ mode, amount }),
-    });
+    const response = await fetchWithAuth(
+      `${API_BASE_URL}/api/menus/${menuId}/stock`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ mode, amount }),
+      },
+    );
     return await response.json();
   } catch (error) {
     console.error("Error updating menu stock:", error);

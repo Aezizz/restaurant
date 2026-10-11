@@ -5,8 +5,11 @@ export default function GreetingCard({
   onSelectMenu,
   customerName,
   onCustomerNameChange,
+  userName: propUserName,
 }) {
-  const [userName, setUserName] = useState("Kopi Lovers <3");
+  const [userName, setUserName] = useState(
+    propUserName !== undefined ? (propUserName || "Kopi Lovers <3") : (localStorage.getItem("userName") || "Kopi Lovers <3")
+  );
   const greetings = [
     "Udah cari penyemangat hari ini?",
     "Mau ngopi apa hari ini?",
@@ -18,9 +21,13 @@ export default function GreetingCard({
   const [randomMenu, setRandomMenu] = useState(null);
 
   useEffect(() => {
-    const savedName = localStorage.getItem("userName");
-    if (savedName) setUserName(savedName);
-  }, []);
+    if (propUserName !== undefined) {
+      setUserName(propUserName || "Kopi Lovers <3");
+    } else {
+      const savedName = localStorage.getItem("userName");
+      setUserName(savedName || "Kopi Lovers <3");
+    }
+  }, [propUserName]);
 
   useEffect(() => {
     if (menus.length > 0) {

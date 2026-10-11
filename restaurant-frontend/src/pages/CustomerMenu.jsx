@@ -12,10 +12,12 @@ import GreetingCard from "../components/GreetingCard";
 import { socket, API_BASE_URL } from "../services/socket";
 import VoucherButton from "../components/VoucherButton";
 import VoucherModal from "../components/VoucherModal";
+import { isAuthenticated, clearAuthSession, getAuthToken } from "../utils/auth";
 
 const RANDOM_DISPLAY_COUNT = 8;
 
 const CATEGORIES = [
+  { key: "Rekomendasi", label: "Rekomendasi" },
   { key: "Makanan Berat", label: "Makanan Berat" },
   { key: "Makanan Ringan", label: "Makanan Ringan" },
   { key: "Coffee", label: "Coffee" },
@@ -29,12 +31,19 @@ export default function CustomerMenu() {
 
   const [menus, setMenus] = useState([]);
   const [activeCategory, setActiveCategory] = useState(null);
-  const [customerName, setCustomerName] = useState(
-    localStorage.getItem("customerName") || "",
+
+  // Status autentikasi & identitas pengguna
+  const isAuthInitial = isAuthenticated();
+  const [isLoggedIn, setIsLoggedIn] = useState(isAuthInitial);
+  const [userName, setUserName] = useState(
+    isAuthInitial ? localStorage.getItem("userName") || "" : "",
   );
+  const [customerName, setCustomerName] = useState(
+    isAuthInitial ? localStorage.getItem("customerName") || "" : "",
+  );
+
   const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false);
   const [hasNewVoucher, setHasNewVoucher] = useState(true); // True kalau ada voucher baru
-  const isLoggedIn = Boolean(localStorage.getItem("userToken")); // Cek status login dari token
   const [cart, setCart] = useState([]);
   const [activeModal, setActiveModal] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -64,6 +73,36 @@ export default function CustomerMenu() {
 
   const isCartOpen = activeModal === "cart";
   const isNotifOpen = activeModal === "notif";
+
+  // --- Validasi & Sinkronisasi Sesi Autentikasi Real-Time ---
+  useEffect(() => {
+    const syncAuth = () => {
+      const valid = isAuthenticated();
+      if (!valid) {
+        // Jika token tidak valid / sudah expired
+        clearAuthSession();
+        setIsLoggedIn(false);
+        setUserName("");
+        setCustomerName("");
+      } else {
+        setIsLoggedIn(true);
+        setUserName(localStorage.getItem("userName") || "");
+        setCustomerName(localStorage.getItem("customerName") || "");
+      }
+    };
+
+    // Validasi langsung saat komponen dimuat
+    syncAuth();
+
+    // Dengarkan perubahan localStorage atau saat jendela kembali aktif (focus)
+    window.addEventListener("storage", syncAuth);
+    window.addEventListener("focus", syncAuth);
+
+    return () => {
+      window.removeEventListener("storage", syncAuth);
+      window.removeEventListener("focus", syncAuth);
+    };
+  }, []);
 
   // --- Fetch menu saat mount ---
   useEffect(() => {
@@ -212,9 +251,32 @@ export default function CustomerMenu() {
       .slice(0, RANDOM_DISPLAY_COUNT);
   }, [menus]);
 
-  const filteredMenus = activeCategory
-    ? menus.filter((menu) => menu.category === activeCategory)
-    : randomMenus;
+  // Daftar produk rekomendasi (berdasarkan flag isRecommended atau fallback produk unggulan/teratas yang tersedia)
+  const recommendedMenus = useMemo(() => {
+    if (menus.length === 0) return [];
+    // 1. Cek apakah ada menu dengan properti isRecommended / is_recommended
+    const explicitlyRecommended = menus.filter(
+      (menu) => menu.isRecommended === true || menu.is_recommended === true
+    );
+    if (explicitlyRecommended.length > 0) {
+      return explicitlyRecommended;
+    }
+    // 2. Fallback kurasi: ambil produk unggulan yang ada stoknya (kopi andalan & makanan berat teratas)
+    const inStock = menus.filter(
+      (menu) => menu.stock === undefined || menu.stock === -1 || menu.stock > 0
+    );
+    return inStock.slice(0, RANDOM_DISPLAY_COUNT);
+  }, [menus]);
+
+  const filteredMenus = useMemo(() => {
+    if (!activeCategory) {
+      return randomMenus;
+    }
+    if (activeCategory === "Rekomendasi") {
+      return recommendedMenus;
+    }
+    return menus.filter((menu) => menu.category === activeCategory);
+  }, [activeCategory, menus, randomMenus, recommendedMenus]);
 
   // --- Handlers ---
   const handleCustomerNameChange = (e) => {
@@ -353,6 +415,7 @@ export default function CustomerMenu() {
           onSelectMenu={handleOpenDetail}
           customerName={customerName}
           onCustomerNameChange={handleCustomerNameChange}
+          userName={userName}
         />
       </div>
 
@@ -397,125 +460,129 @@ export default function CustomerMenu() {
             : "Rekomendasi untuk Anda"}
         </p>
 
-        {/* GRID MENU */}
+        {/* GRID / DAFTAR MENU (Horizontal Compact List) */}
         <div
           onMouseDown={handleGridMouseDown}
-          className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 select-none ${
+          className={`grid grid-cols-1 md:grid-cols-2 gap-3.5 select-none ${
             isPageDragging ? "cursor-grabbing" : "cursor-grab"
           }`}
         >
           {filteredMenus.length > 0 ? (
-            filteredMenus.map((menu, index) => (
-              <div
-                key={menu._id}
-                data-aos="fade-up"
-                data-aos-delay={index * 50}
-                onClick={() => {
-                  if (
-                    menu.stock !== undefined &&
-                    menu.stock !== -1 &&
-                    menu.stock <= 0
-                  ) {
-                    toast.info(`Maaf, stok untuk "${menu.name}" sedang habis.`);
-                    return;
-                  }
-                  handleCardClick(menu);
-                }}
-                className={`bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-[#e8ded2]/60 flex flex-col justify-between group ${
-                  menu.stock !== undefined &&
-                  menu.stock !== -1 &&
-                  menu.stock <= 0
-                    ? "opacity-75 cursor-not-allowed"
-                    : "cursor-pointer"
-                }`}
-              >
-                <div>
-                  <div className="w-full h-48 overflow-hidden bg-gray-100 relative">
+            filteredMenus.map((menu, index) => {
+              const isOutOfStock =
+                menu.stock !== undefined &&
+                menu.stock !== -1 &&
+                menu.stock < 1;
+
+              return (
+                <div
+                  key={menu._id}
+                  data-aos="fade-up"
+                  data-aos-delay={index * 30}
+                  onClick={() => {
+                    if (isOutOfStock) {
+                      toast.info(`Maaf, stok untuk "${menu.name}" sedang habis.`);
+                      return;
+                    }
+                    handleCardClick(menu);
+                  }}
+                  className={`bg-white rounded-2xl p-3 border border-[#e8ded2]/80 shadow-xs hover:shadow-md transition-all duration-200 flex flex-row items-center justify-between gap-3 group relative overflow-hidden ${
+                    isOutOfStock
+                      ? "opacity-70 cursor-not-allowed bg-stone-50"
+                      : "cursor-pointer hover:border-[#5c1f2e]/40 hover:bg-[#fffdfa]"
+                  }`}
+                >
+                  {/* SISI KIRI: Gambar Produk Ringkas Proporsional */}
+                  <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-stone-100 flex-shrink-0 border border-[#e8ded2]/60">
                     <img
                       src={
                         menu.image_url ||
                         "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"
                       }
                       alt={menu.name}
-                      className={`w-full h-full object-cover transition-transform duration-500 ${
-                        menu.stock !== undefined &&
-                        menu.stock !== -1 &&
-                        menu.stock <= 0
-                          ? "grayscale"
-                          : "group-hover:scale-105"
+                      className={`w-full h-full object-cover transition-transform duration-300 ${
+                        isOutOfStock ? "grayscale" : "group-hover:scale-105"
                       }`}
                       draggable={false}
                     />
-                    {/* Badge Habis / Status Stok di atas gambar */}
-                    {menu.stock !== undefined &&
-                    menu.stock !== -1 &&
-                    menu.stock < 1 ? (
-                      <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center">
-                        <span className="px-3.5 py-1.5 bg-red-600/90 text-white font-bold text-xs rounded-full uppercase tracking-wider shadow-lg">
-                          Stok Habis
+
+                    {/* Badge Overlay jika Stok Habis */}
+                    {isOutOfStock && (
+                      <div className="absolute inset-0 bg-black/55 backdrop-blur-[1px] flex items-center justify-center p-1">
+                        <span className="text-[9px] font-bold text-white uppercase tracking-wider bg-red-600/90 px-1.5 py-0.5 rounded shadow">
+                          Habis
                         </span>
                       </div>
-                    ) : menu.stock !== undefined &&
-                      menu.stock !== -1 &&
-                      menu.stock <= 5 ? (
-                      <span className="absolute top-3 right-3 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 bg-amber-500 text-white rounded-md shadow-xs">
-                        Sisa {menu.stock}
-                      </span>
-                    ) : null}
+                    )}
                   </div>
 
-                  <div className="p-5">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs uppercase tracking-wider bg-[#e8ded2]/50 text-[#5c1f2e] px-2.5 py-1 rounded-md font-semibold">
+                  {/* SISI TENGAH: Info Produk (Kategori/Status, Nama, Deskripsi, Harga) */}
+                  <div className="flex-1 min-w-0 flex flex-col justify-center py-0.5">
+                    {/* Baris Kategori & Status Stok */}
+                    <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                      <span className="text-[10px] uppercase tracking-wider bg-[#e8ded2]/60 text-[#5c1f2e] px-2 py-0.5 rounded-md font-semibold">
                         {menu.category}
                       </span>
-                      {/* Label Status Stok */}
-                      {menu.stock !== undefined && menu.stock !== -1 ? (
-                        menu.stock >= 1 ? (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            Menu Tersedia
-                          </span>
-                        ) : (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-red-50 text-red-600 border border-red-200">
-                            Stok Habis
-                          </span>
-                        )
+
+                      {/* Label Status Stok: Hanya menampilkan 'Menu Tersedia' atau 'Stok Habis' tanpa angka stok */}
+                      {isOutOfStock ? (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-50 text-red-600 border border-red-200">
+                          Stok Habis
+                        </span>
                       ) : (
-                        <span className="text-[10px] font-medium text-stone-400">
-                          Stok Tersedia
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          Menu Tersedia
                         </span>
                       )}
                     </div>
-                    <h3 className="text-lg font-bold font-serif mt-2 mb-1 line-clamp-1">
+
+                    {/* Nama Produk */}
+                    <h3 className="text-sm sm:text-base font-bold font-serif text-stone-800 line-clamp-1 group-hover:text-[#5c1f2e] transition-colors">
                       {menu.name}
                     </h3>
-                    <p className="text-base font-bold text-[#5c1f2e]">
+
+                    {/* Deskripsi Singkat */}
+                    {menu.description && (
+                      <p className="text-[11px] text-stone-500 line-clamp-1 mt-0.5 leading-snug">
+                        {menu.description}
+                      </p>
+                    )}
+
+                    {/* Harga Produk */}
+                    <p className="text-xs sm:text-sm font-bold text-[#5c1f2e] mt-1.5">
                       Rp {menu.price?.toLocaleString("id-ID")}
                     </p>
                   </div>
-                </div>
 
-                <div className="p-5 pt-0">
-                  {menu.stock !== undefined &&
-                  menu.stock !== -1 &&
-                  menu.stock < 1 ? (
-                    <button
-                      disabled
-                      className="w-full py-2.5 bg-stone-200 text-stone-400 rounded-2xl font-semibold cursor-not-allowed shadow-none text-xs flex items-center justify-center gap-1.5"
-                    >
-                      <span>Stok Habis</span>
-                    </button>
-                  ) : (
-                    <button className="w-full py-2.5 bg-[#5c1f2e] text-white rounded-2xl font-semibold hover:bg-[#431420] transition-colors duration-200 cursor-pointer shadow-sm active:scale-95 text-xs flex items-center justify-center gap-1.5">
-                      <span>Tambah ke Keranjang</span>
-                      <Search className="w-3.5 h-3.5" />
-                    </button>
-                  )}
+                  {/* SISI KANAN: Tombol / Aksi Pilih Menu Ringkas */}
+                  <div className="flex-shrink-0 flex items-center pr-1">
+                    {isOutOfStock ? (
+                      <button
+                        disabled
+                        className="px-2.5 py-1.5 sm:px-3 sm:py-2 bg-stone-200 text-stone-400 rounded-xl font-bold text-[11px] cursor-not-allowed"
+                      >
+                        Habis
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCardClick(menu);
+                        }}
+                        className="flex items-center gap-1 px-3 py-2 bg-[#5c1f2e] text-white rounded-xl text-xs font-semibold hover:bg-[#431420] transition-colors shadow-xs active:scale-95 cursor-pointer"
+                        title="Pilih & Atur Kustomisasi Menu"
+                      >
+                        <span className="hidden sm:inline">Pilih</span>
+                        <Search className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           ) : (
-            <div className="col-span-full text-center py-12">
+            <div className="col-span-full text-center py-12 bg-white rounded-2xl border border-[#e8ded2]">
               <p className="text-sm text-stone-500">
                 Belum ada menu untuk kategori <strong>{activeCategory}</strong>{" "}
                 di database.

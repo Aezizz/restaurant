@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { KeyRound, LogIn, UserPlus } from "lucide-react";
+import { KeyRound, LogIn, UserPlus, Eye, EyeOff } from "lucide-react";
 
 export default function AuthForm({
   isLoginMode,
@@ -10,6 +10,7 @@ export default function AuthForm({
   handleAuthSubmit,
   loading,
 }) {
+  const [showPassword, setShowPassword] = useState(false);
   return (
     <form onSubmit={handleAuthSubmit} className="space-y-4 pt-2">
       {!isLoginMode && (
@@ -46,16 +47,31 @@ export default function AuthForm({
         <label className="text-xs font-bold uppercase tracking-wider text-stone-700 block mb-1">
           Kata Sandi (Password)
         </label>
-        <input
-          type="password"
-          required
-          value={formData.password}
-          onChange={(e) =>
-            setFormData({ ...formData, password: e.target.value })
-          }
-          placeholder="••••••••"
-          className="w-full text-xs p-3 bg-stone-50 border border-[#e8ded2] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5c1f2e]"
-        />
+        <div className="relative flex items-center">
+          <input
+            type={showPassword ? "text" : "password"}
+            required
+            value={formData.password}
+            onChange={(e) =>
+              setFormData({ ...formData, password: e.target.value })
+            }
+            placeholder="••••••••"
+            className="w-full text-xs p-3 pr-10 bg-stone-50 border border-[#e8ded2] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5c1f2e]"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3.5 z-20 text-stone-400 hover:text-[#5c1f2e] focus:outline-none cursor-pointer p-1 rounded-md hover:bg-stone-100 transition-colors flex items-center justify-center"
+            aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+            title={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+          >
+            {showPassword ? (
+              <EyeOff className="w-4 h-4" />
+            ) : (
+              <Eye className="w-4 h-4" />
+            )}
+          </button>
+        </div>
 
         {/* Tombol Lupa Password (Hanya muncul saat mode login) */}
         {isLoginMode && (

@@ -6,13 +6,15 @@ import AuthForm from "./account/AuthForm";
 import OrderHistoryTab from "./account/OrderHistoryTab";
 import AccountSettingsTab from "./account/AccountSettingsTab";
 import RatingModal from "./account/RatingModal";
+import { isAuthenticated, clearAuthSession } from "../utils/auth";
 
 export default function AccountPage({ isOpen, onClose, onReorder }) {
   if (!isOpen) return null;
 
-  const [token, setToken] = useState(localStorage.getItem("userToken") || "");
+  const isAuth = isAuthenticated();
+  const [token, setToken] = useState(isAuth ? (localStorage.getItem("userToken") || "") : "");
   const [userName, setUserName] = useState(
-    localStorage.getItem("userName") || "",
+    isAuth ? (localStorage.getItem("userName") || "") : ""
   );
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [formData, setFormData] = useState({
@@ -105,9 +107,7 @@ export default function AccountPage({ isOpen, onClose, onReorder }) {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("userToken");
-    localStorage.removeItem("userName");
-    localStorage.removeItem("userRole");
+    clearAuthSession();
     setToken("");
     setUserName("");
     toast.info("Berhasil keluar akun.");
