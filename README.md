@@ -31,11 +31,3 @@
 
 ---
 
-## Panduan Instalasi & Menjalankan Proyek
-
-Pastikan komputer/laptop lu sudah menginstal **Node.js** dan **MongoDB**.
-
-### 1. Clone Repository
-```bash
-git clone [https://github.com/username/vyna-coffee-pos.git](https://github.com/username/vyna-coffee-pos.git)
-cd vyna-coffee-pos
