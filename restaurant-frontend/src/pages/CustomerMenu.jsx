@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Search } from "lucide-react";
+import { ShoppingCartPlus } from "lucide-react";
 import AccountPage from "../components/AccountPage";
 import BottomNav from "../components/BottomNav";
 import PromoCarousel from "../components/PromoCarousel";
@@ -256,14 +256,14 @@ export default function CustomerMenu() {
     if (menus.length === 0) return [];
     // 1. Cek apakah ada menu dengan properti isRecommended / is_recommended
     const explicitlyRecommended = menus.filter(
-      (menu) => menu.isRecommended === true || menu.is_recommended === true
+      (menu) => menu.isRecommended === true || menu.is_recommended === true,
     );
     if (explicitlyRecommended.length > 0) {
       return explicitlyRecommended;
     }
     // 2. Fallback kurasi: ambil produk unggulan yang ada stoknya (kopi andalan & makanan berat teratas)
     const inStock = menus.filter(
-      (menu) => menu.stock === undefined || menu.stock === -1 || menu.stock > 0
+      (menu) => menu.stock === undefined || menu.stock === -1 || menu.stock > 0,
     );
     return inStock.slice(0, RANDOM_DISPLAY_COUNT);
   }, [menus]);
@@ -470,9 +470,7 @@ export default function CustomerMenu() {
           {filteredMenus.length > 0 ? (
             filteredMenus.map((menu, index) => {
               const isOutOfStock =
-                menu.stock !== undefined &&
-                menu.stock !== -1 &&
-                menu.stock < 1;
+                menu.stock !== undefined && menu.stock !== -1 && menu.stock < 1;
 
               return (
                 <div
@@ -481,7 +479,9 @@ export default function CustomerMenu() {
                   data-aos-delay={index * 30}
                   onClick={() => {
                     if (isOutOfStock) {
-                      toast.info(`Maaf, stok untuk "${menu.name}" sedang habis.`);
+                      toast.info(
+                        `Maaf, stok untuk "${menu.name}" sedang habis.`,
+                      );
                       return;
                     }
                     handleCardClick(menu);
@@ -574,7 +574,7 @@ export default function CustomerMenu() {
                         title="Pilih & Atur Kustomisasi Menu"
                       >
                         <span className="hidden sm:inline">Pilih</span>
-                        <Search className="w-3.5 h-3.5" />
+                        <ShoppingCartPlus className="w-3.5 h-3.5" />
                       </button>
                     )}
                   </div>
